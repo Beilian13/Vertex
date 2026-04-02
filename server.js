@@ -50,10 +50,12 @@ const Ocorrencia = mongoose.model('Ocorrencia', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-const Forum = mongoose.model('Forum', new mongoose.Schema({
-    titulo: String,
+const Enquete = mongoose.model('Enquete', new mongoose.Schema({
+    pergunta: String,
+    opcoes: [{ texto: String, votos: { type: Number, default: 0 } }],
+    votosUsuarios: [String], // IDs de quem já votou
     autor: String,
-    reportado: { type: Boolean, default: false }
+    createdAt: { type: Date, default: Date.now }
 }));
 
 // --- MIDDLEWARES ---
@@ -95,6 +97,27 @@ app.post('/api/auth/login', async (req, res) => {
     } else { res.status(401).json({ msg: "Credenciais inválidas." }); }
 });
 
+// Enquetes (Comunicação 2 Lados)
+app.get('/api/enquetes', authenticate, async (req, res) => res.json(await Enquete.find().sort({createdAt:-1})));
+
+app.post('/api/enquetes', authenticate, authorize('Professor'), async (req, res) => {
+    const { pergunta, opcoes } = req.body;
+    const formattedOpcoes = opcoes.map(o => ({ texto: o, votos: 0 }));
+    res.json(await Enquete.create({ pergunta, opcoes: formattedOpcoes, autor: req.user.nome }));
+});
+
+app.post('/api/enquetes/votar', authenticate, async (req, res) => {
+    const { enqueteId, opcaoIndex } = req.body;
+    const enquete = await Enquete.findById(enqueteId);
+    if (enquete.votosUsuarios.includes(req.user.id)) return res.status(400).json({ msg: "Já votou!" });
+    
+    enquete.opcoes[opcaoIndex].votos += 1;
+    enquete.votosUsuarios.push(req.user.id);
+    await enquete.save();
+    res.json(enquete);
+});
+
+// Outras rotas...
 app.get('/api/noticias', authenticate, async (req, res) => res.json(await Noticia.find().sort({createdAt:-1})));
 app.post('/api/noticias', authenticate, authorize('Professor'), async (req, res) => {
     res.json(await Noticia.create({ titulo: req.body.titulo, autor: req.user.nome }));
@@ -109,14 +132,13 @@ app.get('/api/ocorrencias', authenticate, async (req, res) => {
     const query = ['Direcao', 'Admin'].includes(req.user.role) ? {} : { alunoNome: req.user.nome };
     res.json(await Ocorrencia.find(query).sort({createdAt:-1}));
 });
+
 app.post('/api/ocorrencias', authenticate, authorize('Direcao'), async (req, res) => {
     res.json(await Ocorrencia.create({ ...req.body, autor: req.user.nome }));
 });
 
-// ADMIN: Gerenciamento de Senhas
-app.get('/api/admin/users', authenticate, authorize('Admin'), async (req, res) => {
-    res.json(await User.find({}, 'nome email role'));
-});
+// Admin Control
+app.get('/api/admin/users', authenticate, authorize('Admin'), async (req, res) => res.json(await User.find({}, 'nome email role')));
 app.post('/api/admin/reset-password', authenticate, authorize('Admin'), async (req, res) => {
     const hashed = await bcrypt.hash(req.body.novaSenha, 10);
     await User.findByIdAndUpdate(req.body.userId, { senha: hashed });
