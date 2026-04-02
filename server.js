@@ -13,7 +13,7 @@ app.use(express.static(__dirname));
 
 // Database Connection
 const mongoURI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
-mongoose.connect(mongoURI).then(() => console.log("✅ Vertex Engine: Online"));
+mongoose.connect(mongoURI).then(() => console.log("🚀 Vertex Pro: Engine Online"));
 
 // --- SCHEMAS ---
 const User = mongoose.model('User', new mongoose.Schema({
@@ -42,7 +42,7 @@ const Thread = mongoose.model('Thread', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- AUTH ROUTES ---
+// --- ROUTES (Auth, Academic, Social) ---
 app.post('/api/auth/register', async (req, res) => {
     const { nome, email, senha, turma } = req.body;
     try {
@@ -61,33 +61,12 @@ app.post('/api/auth/login', async (req, res) => {
     } else { res.status(401).send("Erro"); }
 });
 
-// --- ACADEMIC ROUTES ---
 app.get('/api/tasks', async (req, res) => res.json(await Task.find().sort({ createdAt: -1 })));
-
-app.post('/api/tasks', async (req, res) => {
-    const { titulo, materia, dataEntrega, token } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await Task.create({ titulo, materia, dataEntrega, autor: decoded.nome });
-    res.status(201).send("OK");
-});
-
 app.get('/api/my-grades', async (req, res) => {
     const decoded = jwt.verify(req.headers.authorization, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
     res.json(user.grades || []);
 });
-
-app.post('/api/materials', async (req, res) => {
-    const { titulo, materia, url, token } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await Material.create({ titulo, materia, url, autor: decoded.nome, turma: decoded.turma });
-    res.status(201).send("OK");
-});
-
-app.get('/api/materials', async (req, res) => res.json(await Material.find().sort({ createdAt: -1 })));
-
-// --- SOCIAL ROUTES ---
-app.get('/api/forum', async (req, res) => res.json(await Thread.find().sort({ createdAt: -1 })));
 
 app.post('/api/forum', async (req, res) => {
     const { titulo, conteudo, pollData, token } = req.body;
@@ -96,21 +75,7 @@ app.post('/api/forum', async (req, res) => {
     res.status(201).send("OK");
 });
 
-app.post('/api/forum/vote', async (req, res) => {
-    const { threadId, token } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const thread = await Thread.findById(threadId);
-    thread.upvotes.includes(decoded.id) ? thread.upvotes.pull(decoded.id) : thread.upvotes.push(decoded.id);
-    await thread.save();
-    res.json({ count: thread.upvotes.length });
-});
-
-app.post('/api/forum/reply', async (req, res) => {
-    const { threadId, texto, token } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await Thread.findByIdAndUpdate(threadId, { $push: { replies: { autor: decoded.nome, texto } } });
-    res.send("OK");
-});
+app.get('/api/forum', async (req, res) => res.json(await Thread.find().sort({ createdAt: -1 })));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.listen(process.env.PORT || 3000);
