@@ -2,16 +2,15 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Vertex | Full Ecosystem</title>
+    <title>Vertex | Full Suite</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --accent: #00d2ff; --bg: #030303; --card: rgba(20, 20, 20, 0.7); --border: rgba(255, 255, 255, 0.1); --text: #eee; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; background-image: radial-gradient(circle at 50% -20%, #112244 0%, transparent 50%); min-height: 100vh; }
-        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; background-image: radial-gradient(circle at 50% -20%, #112244 0%, transparent 50%); min-height: 100vh; overflow-x: hidden; }
+        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 20px; transition: 0.3s; }
         
-        /* SIDEBAR */
         #sidebar { width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: none; flex-direction: column; padding: 30px; }
         .nav-link { padding: 15px; margin: 5px 0; border-radius: 12px; cursor: pointer; color: #888; transition: 0.3s; }
         .nav-link.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); font-weight: bold; }
@@ -21,11 +20,10 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* INPUTS & BUTTONS */
-        input, textarea, select { width: 100%; padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; outline: none; }
+        input, textarea { width: 100%; padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; outline: none; }
         .btn-prime { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
-        .homework-card { border-left: 4px solid #ffcc00; }
         .branch { border-left: 2px solid #333; margin-left: 20px; padding-left: 15px; margin-top: 10px; }
+        .hw-tag { color: #ffcc00; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -36,97 +34,141 @@
         <div class="nav-link" onclick="switchView('homeworks')">📚 Lição de Casa</div>
         <div class="nav-link" onclick="switchView('grades')">📊 Boletim PDF</div>
         <div class="nav-link" onclick="switchView('forum')">💬 Fórum</div>
-        <div class="nav-link" onclick="logout()" style="margin-top:auto; color:#ff4b4b">🚪 Sair</div>
+        <div id="link-direcao" class="nav-link" style="display:none; color:#ff4b4b" onclick="switchView('direcao')">🛡️ Direção</div>
+        <div class="nav-link" onclick="logout()" style="margin-top:auto; color:#ff4b4b">Sair</div>
     </nav>
 
     <main id="main-screen">
         <h2 id="welcome-msg" style="margin-bottom:30px; font-family:'Poppins';">Dashboard</h2>
 
         <section id="view-home" class="view active">
-            <div id="admin-task-panel" class="glass" style="display:none; border-color: var(--accent);">
-                <h3>Postar Comunicado/Atividade</h3>
-                <input type="text" id="t-tit" placeholder="Título">
-                <input type="text" id="t-mat" placeholder="Matéria">
-                <button class="btn-prime" onclick="postTask()">Postar no Mural</button>
+            <div id="prof-task" class="glass" style="display:none; border-color: var(--accent);">
+                <h3>Postar Comunicado</h3>
+                <input type="text" id="t-tit" placeholder="Assunto">
+                <button class="btn-prime" onclick="postTask()">Postar</button>
             </div>
             <div id="task-list"></div>
         </section>
 
         <section id="view-homeworks" class="view">
-            <div id="admin-hw-panel" class="glass" style="display:none; border-color: #ffcc00;">
+            <div id="prof-hw" class="glass" style="display:none; border-color: #ffcc00;">
                 <h3>Nova Lição de Casa</h3>
-                <input type="text" id="h-tit" placeholder="Título da Lição">
-                <input type="text" id="h-mat" placeholder="Matéria">
-                <textarea id="h-desc" placeholder="Instruções da lição..."></textarea>
+                <input type="text" id="h-tit" placeholder="Título">
+                <input type="text" id="h-mat" placeholder="Disciplina">
+                <textarea id="h-desc" placeholder="Instruções..."></textarea>
                 <input type="date" id="h-date">
-                <button class="btn-prime" style="background:#ffcc00" onclick="postHomework()">Publicar Lição</button>
+                <button class="btn-prime" style="background:#ffcc00" onclick="postHomework()">Lançar Lição</button>
             </div>
             <div id="homework-list"></div>
         </section>
 
-        <section id="view-grades" class="view">
-            <div id="pdf-area" class="glass">
-                <h2>Relatório Oficial</h2>
-                <table style="width:100%; margin-top:20px;" id="grade-table"></table>
+        <section id="view-direcao" class="view">
+            <div class="glass">
+                <h3>Painel de Controle da Direção</h3>
+                <p>Gerenciamento de usuários e infraestrutura escolar.</p>
+                <div id="user-admin-list" style="margin-top:20px;"></div>
             </div>
-            <button class="btn-prime" onclick="exportPDF()">Exportar PDF</button>
         </section>
 
         <section id="view-forum" class="view">
-            <div id="forum-list"></div>
+            <div id="forum-main-list">
+                <div class="glass">
+                    <h3>Novo Debate</h3>
+                    <input type="text" id="f-tit" placeholder="Título">
+                    <textarea id="f-con" placeholder="Mensagem..."></textarea>
+                    <button class="btn-prime" onclick="postThread()">Abrir Tópico</button>
+                </div>
+                <div id="forum-container"></div>
+            </div>
+            <div id="thread-detail" style="display:none">
+                <button class="btn-prime" onclick="closeThread()" style="width:auto; padding:5px 15px; margin-bottom:20px;">← Voltar</button>
+                <div id="thread-header" class="glass"></div>
+                <div id="comment-tree"></div>
+            </div>
         </section>
     </main>
 
     <script>
         const token = () => localStorage.getItem('v-token');
+        let currentThreadId = null;
 
+        // LOGIN RECOVERY / BOOT
         function showDashboard(user) {
-            document.body.classList.add('logged-in');
             document.getElementById('sidebar').style.display = 'flex';
             document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('welcome-msg').innerText = `Olá, ${user.nome}`;
+            document.getElementById('welcome-msg').innerText = `Bem-vindo, ${user.nome}`;
 
-            // ROLE CHECK: If admin/professor, show panels
-            if(['admin', 'professor'].includes(user.role)) {
-                document.getElementById('admin-task-panel').style.display = 'block';
-                document.getElementById('admin-hw-panel').style.display = 'block';
+            if(['professor', 'direcao'].includes(user.role)) {
+                document.getElementById('prof-task').style.display = 'block';
+                document.getElementById('prof-hw').style.display = 'block';
+            }
+            if(user.role === 'direcao') {
+                document.getElementById('link-direcao').style.display = 'block';
+                loadDirecao();
             }
             loadTasks();
             loadHomeworks();
         }
 
+        // HOMEWORKS LOGIC
         async function postHomework() {
-            const body = {
-                titulo: document.getElementById('h-tit').value,
-                materia: document.getElementById('h-mat').value,
-                descricao: document.getElementById('h-desc').value,
-                dataEntrega: document.getElementById('h-date').value,
-                token: token()
-            };
-            const res = await fetch('/api/homeworks', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-            if(res.ok) loadHomeworks();
+            const body = { titulo:h-tit.value, materia:h-mat.value, descricao:h-desc.value, dataEntrega:h-date.value, token:token() };
+            await fetch('/api/homeworks', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+            loadHomeworks();
         }
 
         async function loadHomeworks() {
             const hws = await (await fetch('/api/homeworks')).json();
             document.getElementById('homework-list').innerHTML = hws.map(h => `
-                <div class="glass homework-card">
-                    <span style="color:#ffcc00; font-weight:bold;">${h.materia}</span>
+                <div class="glass">
+                    <div class="hw-tag">${h.materia}</div>
                     <h4>${h.titulo}</h4>
                     <p style="margin:10px 0; color:#aaa;">${h.descricao}</p>
-                    <small>Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</small>
+                    <small>📅 Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</small>
                 </div>
             `).join('');
         }
 
-        function switchView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
-            if(id === 'homeworks') loadHomeworks();
+        // DIRECAO LOGIC
+        async function loadDirecao() {
+            const users = await (await fetch('/api/users', { headers:{'Authorization':token()} })).json();
+            document.getElementById('user-admin-list').innerHTML = users.map(u => `
+                <div style="padding:10px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+                    <span>${u.nome} (${u.role})</span>
+                    <small>${u.email}</small>
+                </div>
+            `).join('');
         }
 
-        // [Add Auth Login logic to call showDashboard(data)]
+        // FORUM LOGIC (Detail Mode)
+        async function openThread(id) {
+            currentThreadId = id;
+            document.getElementById('forum-main-list').style.display = 'none';
+            document.getElementById('thread-detail').style.display = 'block';
+            const t = await (await fetch(`/api/forum/${id}`)).json();
+            document.getElementById('thread-header').innerHTML = `<h2>${t.titulo}</h2><p>${t.conteudo}</p>`;
+            renderComments(t.replies);
+        }
+
+        function renderComments(replies, parentId = null) {
+            const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
+            if(parentId === null) container.innerHTML = '';
+            replies.filter(r => r.parentId === parentId).forEach(r => {
+                const div = document.createElement('div');
+                div.className = parentId === null ? 'glass' : 'branch';
+                div.innerHTML = `<small style="color:var(--accent)">${r.autor}</small><p>${r.texto}</p>
+                                 <button class="btn-prime" style="width:auto; padding:2px 10px; font-size:0.6rem;" onclick="replyTo('${r.id}')">Responder</button>
+                                 <div id="in-${r.id}"></div><div id="replies-${r.id}"></div>`;
+                container.appendChild(div);
+                renderComments(replies, r.id);
+            });
+        }
+
+        function switchView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
+        }
+
         function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
