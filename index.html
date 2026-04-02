@@ -3,297 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex | Gestão Escolar</title>
+    <title>Vertex | Platform</title>
     <style>
-        :root { 
-            --primary: #007BFF; 
-            --bg: #050505; 
-            --card: #111; 
-            --text: #eee; 
-            --border: #222;
-            --sidebar-w: 260px;
-            --sidebar-collapsed: 80px;
-        }
+        :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; --sidebar-w: 260px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        /* SIDEBAR */
+        #sidebar { width: var(--sidebar-w); height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; display: flex; flex-direction: column; }
+        .nav-item { padding: 12px; margin: 4px 0; border-radius: 8px; cursor: pointer; color: #888; transition: 0.2s; display: flex; align-items: center; }
+        .nav-item:hover, .nav-item.active { background: #151515; color: var(--primary); }
+        .nav-item i { margin-right: 12px; }
 
-        /* --- AUTH SCREEN --- */
-        #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h2 { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 20px; font-size: 1.5rem; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.9rem; }
-        input:focus { border-color: var(--primary); outline: none; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        button:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        /* CONTENT */
+        main { margin-left: var(--sidebar-w); flex-grow: 1; padding: 40px; display: none; }
+        .view { display: none; }
+        .view.active { display: block; }
 
-        /* --- DASHBOARD LAYOUT --- */
-        #main-screen { display: none; min-height: 100vh; }
-        
-        #sidebar {
-            width: var(--sidebar-w);
-            height: 100vh;
-            background: #080808;
-            border-right: 1px solid var(--border);
-            position: fixed;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            padding: 20px 15px;
-            z-index: 100;
-        }
+        /* GRADES TABLE (EXCEL STYLE) */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #111; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
+        th { background: #1a1a1a; color: var(--primary); }
+        input.grade-input { width: 60px; background: transparent; border: none; color: gold; text-align: center; font-weight: bold; }
 
-        #sidebar.collapsed { width: var(--sidebar-collapsed); }
-        #sidebar.collapsed .menu-text, #sidebar.collapsed .logo-text { display: none; }
-
-        .logo-area { display: flex; align-items: center; margin-bottom: 40px; padding-left: 10px; }
-        .toggle-btn { cursor: pointer; font-size: 1.4rem; color: var(--primary); margin-right: 15px; }
-        .logo-text { font-weight: 800; letter-spacing: 2px; color: #fff; }
-
-        .menu-item {
-            padding: 14px;
-            margin: 4px 0;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: 0.2s;
-            color: #999;
-            text-decoration: none;
-        }
-        .menu-item:hover { background: #151515; color: #fff; }
-        .menu-item.active { background: rgba(0,123,255,0.1); color: var(--primary); font-weight: 600; }
-        .icon { font-size: 1.2rem; margin-right: 15px; min-width: 25px; display: flex; justify-content: center; }
-
-        #content-area {
-            flex-grow: 1;
-            margin-left: var(--sidebar-w);
-            padding: 40px;
-            transition: 0.3s;
-            max-width: 1200px;
-        }
-        #sidebar.collapsed ~ #content-area { margin-left: var(--sidebar-collapsed); }
-
-        /* --- UI COMPONENTS --- */
-        .task-card { background: #121212; padding: 18px; border-radius: 12px; margin-top: 15px; border: 1px solid var(--border); transition: 0.2s; }
-        .task-card:hover { border-color: #333; transform: scale(1.01); }
-        .badge { background: rgba(0,123,255,0.1); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .admin-section { border: 1px dashed #444; padding: 20px; border-radius: 12px; margin-bottom: 30px; background: rgba(255, 215, 0, 0.02); }
+        /* FORUM & CHECKLIST */
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .av2-banner { background: linear-gradient(90deg, #ff4444, #b82e2e); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .thread { border-bottom: 1px solid #222; padding: 15px 0; }
     </style>
 </head>
 <body>
 
-    <div id="auth-container">
-        <div id="reg-box" class="box" style="width: 380px;">
-            <h2>Criar Conta</h2>
-            <input type="text" id="reg-nome" placeholder="Nome Completo">
-            <input type="email" id="reg-email" placeholder="E-mail Institucional">
-            <input type="password" id="reg-pass" placeholder="Senha">
-            <input type="text" id="reg-turma" placeholder="Turma (ex: 8º Ano A)">
-            <button onclick="auth('register')">Cadastrar no Vertex</button>
-            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer; color: #666;" onclick="toggleAuth()">Já tem conta? <span style="color: var(--primary)">Entrar</span></p>
+    <nav id="sidebar">
+        <h2 style="color:var(--primary); margin-bottom:30px;">VERTEX</h2>
+        <div class="nav-item active" onclick="switchView('home')">🏠 Início</div>
+        <div class="nav-item" onclick="switchView('grades')">📊 Notas (Excel)</div>
+        <div class="nav-item" onclick="switchView('forum')">💬 Fórum</div>
+        <div class="nav-item" style="margin-top:auto; color:#ff4444;" onclick="logout()">🚪 Sair</div>
+    </nav>
+
+    <main id="main-screen">
+        <section id="view-home" class="view active">
+            <div id="av2-check" class="av2-banner">
+                <strong>⚠️ SEMANA DE AV2:</strong> Check-list de estudos ativo!
+            </div>
+            <h1>Mural de Atividades</h1>
+            <div id="task-list"></div>
+        </section>
+
+        <section id="view-grades" class="view">
+            <h1>Calculadora de Médias</h1>
+            <p style="color:#666; margin-bottom:20px;">Insira suas notas para calcular o GPA automaticamente.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="grades-body">
+                    </tbody>
+            </table>
+        </section>
+
+        <section id="view-forum" class="view">
+            <h1>Fórum de Alunos</h1>
+            <div class="card" style="margin-top:20px;">
+                <input type="text" id="forum-title" placeholder="Título da dúvida">
+                <textarea id="forum-content" style="width:100%; height:80px; background:#1a1a1a; color:white; border:1px solid #222; border-radius:8px; padding:10px; margin:10px 0;" placeholder="Explique sua dúvida ou compartilhe algo..."></textarea>
+                <button onclick="postThread()">Postar no Fórum</button>
+            </div>
+            <div id="forum-list"></div>
+        </section>
+    </main>
+
+    <div id="auth-container" style="width:100%; display:flex; justify-content:center; align-items:center; height:100vh;">
+        <div class="box" style="width:350px; background:#111; padding:30px; border-radius:12px; border:1px solid #222;">
+            <h2 id="auth-title">Vertex Login</h2>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="auth()">Entrar</button>
         </div>
-
-        <div id="log-box" class="box" style="display:none; width: 380px;">
-            <h2>Vertex Login</h2>
-            <input type="email" id="log-email" placeholder="E-mail">
-            <input type="password" id="log-pass" placeholder="Senha">
-            <button onclick="auth('login')">Acessar Sistema</button>
-            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer; color: #666;" onclick="toggleAuth()">Não tem conta? <span style="color: var(--primary)">Criar uma</span></p>
-        </div>
-    </div>
-
-    <div id="main-screen">
-        <nav id="sidebar">
-            <div class="logo-area">
-                <span class="toggle-btn" onclick="toggleSidebar()">☰</span>
-                <span class="logo-text">VERTEX</span>
-            </div>
-            
-            <div class="menu-item active">
-                <span class="icon">🏠</span>
-                <span class="menu-text">Início</span>
-            </div>
-            <div class="menu-item">
-                <span class="icon">📅</span>
-                <span class="menu-text">Horários</span>
-            </div>
-            <div class="menu-item">
-                <span class="icon">📊</span>
-                <span class="menu-text">Notas</span>
-            </div>
-            <div class="menu-item">
-                <span class="icon">📁</span>
-                <span class="menu-text">Materiais</span>
-            </div>
-            <div style="margin-top: auto;">
-                <div class="menu-item" onclick="logout()" style="color: #ff4444;">
-                    <span class="icon">🚪</span>
-                    <span class="menu-text">Sair</span>
-                </div>
-            </div>
-        </nav>
-
-        <main id="content-area">
-            <header class="header">
-                <div>
-                    <h1 id="user-name" style="font-size: 2rem; letter-spacing: -1px;">Olá, Estudante</h1>
-                    <span id="user-role" class="badge">Acesso Aluno</span>
-                </div>
-                <div style="text-align: right;">
-                    <p id="current-date" style="color: #666; font-size: 0.9rem;"></p>
-                </div>
-            </header>
-
-            <div id="professor-panel" class="box admin-section" style="display:none;">
-                <h3 style="margin-bottom: 15px;">🚀 Postar Nova Atividade</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <input type="text" id="task-materia" placeholder="Matéria (ex: Matemática)">
-                    <input type="date" id="task-date">
-                </div>
-                <input type="text" id="task-titulo" placeholder="Descrição da Atividade (ex: Exercícios Pág 42)">
-                <button onclick="postTask()" style="background: #218838;">Publicar Atividade</button>
-            </div>
-
-            <div id="admin-panel" class="box admin-section" style="display:none; border-color: #b8860b;">
-                <h3 style="margin-bottom: 15px; color: #ffd700;">⚙️ Gestão de Usuários</h3>
-                <input type="text" id="admin-target" placeholder="E-mail do Usuário">
-                <select id="admin-role">
-                    <option value="aluno">Aluno</option>
-                    <option value="representante">Representante</option>
-                    <option value="professor">Professor</option>
-                    <option value="direcao">Direção</option>
-                </select>
-                <button onclick="updateRole()" style="background: #333;">Atualizar Cargo</button>
-            </div>
-
-            <div class="box">
-                <h3 style="margin-bottom: 20px;">📌 Mural de Atividades</h3>
-                <div id="task-list">
-                    <p style="color: #444;">Carregando atividades...</p>
-                </div>
-            </div>
-        </main>
     </div>
 
     <script>
-        // Set date
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const subjects = ["Matemática", "Português", "Física", "História", "Geografia", "Inglês"];
 
-        // Auto-login check
         window.onload = () => {
             const user = localStorage.getItem('v-user');
             if(user) showDashboard(JSON.parse(user));
+            setupGrades();
+            checkAV2();
         };
 
-        function toggleAuth() {
-            document.getElementById('reg-box').style.display = document.getElementById('reg-box').style.display === 'none' ? 'block' : 'none';
-            document.getElementById('log-box').style.display = document.getElementById('log-box').style.display === 'none' ? 'block' : 'none';
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            if(viewId === 'forum') loadForum();
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        async function auth(type) {
-            const isReg = type === 'register';
-            const data = isReg ? {
-                nome: document.getElementById('reg-nome').value,
-                email: document.getElementById('reg-email').value,
-                senha: document.getElementById('reg-pass').value,
-                turma: document.getElementById('reg-turma').value
-            } : {
-                email: document.getElementById('log-email').value,
-                senha: document.getElementById('log-pass').value
-            };
-
-            const res = await fetch(isReg ? '/api/auth/register' : '/api/auth/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+        function setupGrades() {
+            const body = document.getElementById('grades-body');
+            subjects.forEach(s => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${s}</td>
+                        <td><input type="number" class="grade-input" oninput="calc(this)" placeholder="0"></td>
+                        <td><input type="number" class="grade-input" oninput="calc(this)" placeholder="0"></td>
+                        <td class="media">0.0</td>
+                        <td class="status">-</td>
+                    </tr>`;
             });
+        }
 
+        function calc(el) {
+            const row = el.parentElement.parentElement;
+            const n1 = parseFloat(row.cells[1].children[0].value) || 0;
+            const n2 = parseFloat(row.cells[2].children[0].value) || 0;
+            const media = (n1 + n2) / 2;
+            row.cells[3].innerText = media.toFixed(1);
+            row.cells[4].innerText = media >= 6 ? "✅ Aprovado" : "❌ Recuperação";
+            row.cells[4].style.color = media >= 6 ? "#28a745" : "#ff4444";
+        }
+
+        function checkAV2() {
+            // Logic to check if current date is AV2 week (Example: first week of April)
+            const now = new Date();
+            if(now.getMonth() === 3) { // April
+                document.getElementById('av2-check').style.display = 'block';
+            }
+        }
+
+        async function loadForum() {
+            const res = await fetch('/api/forum');
+            const threads = await res.json();
+            const list = document.getElementById('forum-list');
+            list.innerHTML = threads.map(t => `
+                <div class="card thread">
+                    <h4>${t.titulo}</h4>
+                    <p style="color:#bbb; font-size:0.9rem; margin:10px 0;">${t.conteudo}</p>
+                    <small style="color:var(--primary)">Por: ${t.autor} | ${t.turma}</small>
+                </div>
+            `).join('');
+        }
+
+        async function postThread() {
+            const payload = {
+                titulo: document.getElementById('forum-title').value,
+                conteudo: document.getElementById('forum-content').value,
+                token: localStorage.getItem('v-token')
+            };
+            await fetch('/api/forum', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            loadForum();
+        }
+
+        // AUTH LOGIC (Previous consolidated)
+        async function auth() {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('pass').value;
+            const res = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, senha}) });
             if(res.ok) {
-                if(isReg) { alert("Conta criada! Faça login."); toggleAuth(); }
-                else {
-                    const user = await res.json();
-                    localStorage.setItem('v-user', JSON.stringify(user));
-                    localStorage.setItem('v-token', user.token);
-                    showDashboard(user);
-                }
-            } else { alert("Erro na autenticação. Verifique os dados."); }
+                const user = await res.json();
+                localStorage.setItem('v-user', JSON.stringify(user));
+                localStorage.setItem('v-token', user.token);
+                showDashboard(user);
+            }
         }
 
         function showDashboard(user) {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('main-screen').style.display = 'flex';
-            document.getElementById('user-name').innerText = `Olá, ${user.nome.split(' ')[0]}`;
-            document.getElementById('user-role').innerText = `Acesso ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
-
-            if(['admin', 'direcao', 'professor'].includes(user.role)) {
-                document.getElementById('professor-panel').style.display = 'block';
-            }
-            if(user.role === 'admin' || user.role === 'direcao') {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
             loadTasks();
         }
 
         async function loadTasks() {
             const res = await fetch('/api/tasks');
             const tasks = await res.json();
-            const list = document.getElementById('task-list');
-            list.innerHTML = tasks.length ? '' : '<p style="color: #555;">Nenhuma atividade postada ainda.</p>';
-            tasks.forEach(t => {
-                list.innerHTML += `<div class="task-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge">${t.materia}</span>
-                        <small style="color:#555">Postado por: ${t.autor}</small>
-                    </div>
-                    <p style="font-weight:600; font-size:1.1rem;">${t.titulo}</p>
-                    <p style="margin-top:10px; font-size:0.85rem; color:#888;">📅 Entrega: ${new Date(t.dataEntrega).toLocaleDateString('pt-BR')}</p>
-                </div>`;
-            });
+            document.getElementById('task-list').innerHTML = tasks.map(t => `<div class="card"><strong>${t.materia}</strong>: ${t.titulo}</div>`).join('');
         }
 
-        async function postTask() {
-            const payload = {
-                materia: document.getElementById('task-materia').value,
-                titulo: document.getElementById('task-titulo').value,
-                dataEntrega: document.getElementById('task-date').value,
-                token: localStorage.getItem('v-token')
-            };
-            const res = await fetch('/api/tasks', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            if(res.ok) {
-                alert("Atividade publicada!");
-                loadTasks();
-            }
-        }
-
-        async function updateRole() {
-            const payload = {
-                targetEmail: document.getElementById('admin-target').value,
-                newRole: document.getElementById('admin-role').value,
-                token: localStorage.getItem('v-token')
-            };
-            const res = await fetch('/api/admin/update-role', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            alert(await res.text());
-        }
-
-        function logout() {
-            localStorage.clear();
-            location.reload();
-        }
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
