@@ -3,100 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex | Scholar Management</title>
+    <title>Vertex | Login</title>
     <style>
-        :root {
-            /* Vertex Default Palette */
-            --primary-color: #007BFF; /* Azul Neutro */
-            --bg-color: #000000;      /* Preto Absoluto */
-            --card-bg: #121212;       /* Preto Diferenciado */
-            --text-color: #ffffff;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .header {
-            border-left: 4px solid var(--primary-color); /* Fio de Luz */
-            padding-left: 15px;
-            margin-bottom: 30px;
-        }
-
-        .task-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Estilo Shadow */
-            border-right: 2px solid transparent;
-            transition: 0.3s;
-        }
-
-        .task-card:hover {
-            border-right: 2px solid var(--primary-color); /* Feedback no Hover */
-        }
-
-        .materia-tag {
-            color: var(--primary-color);
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-
-        /* O Atlas Arrastável (Placeholder Visual) */
-        #atlas-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: var(--primary-color);
-            border-radius: 50%;
-            cursor: move;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px var(--primary-color);
-        }
+        :root { --primary: #007BFF; --bg: #000; --card: #121212; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
+        .header { border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 30px; }
+        .auth-box { background: var(--card); padding: 20px; border-radius: 12px; max-width: 350px; margin: auto; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        input { background: #222; color: #fff; }
+        button { background: var(--primary); color: #fff; font-weight: bold; cursor: pointer; }
+        .admin-only { display: none; border: 1px dashed var(--primary); padding: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Vertex</h1>
-        <p>Tarefas de Casa | 8º Ano A</p>
+    <div id="login-screen" class="auth-box">
+        <h2>Vertex Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Senha">
+        <button onclick="login()">Entrar</button>
     </div>
 
-    <div id="task-list">
-        <div class="task-card">
-            <span class="materia-tag">História</span>
-            <h3>Revolução Industrial</h3>
-            <p>Ler o texto da página 42 e resumir os pontos principais para a P1.</p>
-            <small>Entrega: 05/04/2026</small>
+    <div id="main-screen" style="display:none;">
+        <div class="header">
+            <h1 id="welcome">Bem-vindo</h1>
+            <p id="role-tag" style="color: var(--primary); font-weight: bold;"></p>
+        </div>
+
+        <div id="admin-panel" class="admin-only">
+            <h3>Painel de Direção</h3>
+            <input type="text" id="targetEmail" placeholder="Email do Aluno">
+            <select id="newRole">
+                <option value="representante">Representante</option>
+                <option value="professor">Professor</option>
+                <option value="direcao">Direção</option>
+            </select>
+            <button onclick="updateRole()">Mudar Cargo</button>
         </div>
     </div>
 
-    <div id="atlas-btn">
-        <span style="font-size: 24px;">💎</span>
-    </div>
-
     <script>
-        // Lógica simples para carregar tarefas (Exemplo)
-        async function loadTasks() {
-            try {
-                const response = await fetch('http://localhost:3000/api/tasks/8A');
-                const data = await response.json();
-                console.log("Tarefas carregadas:", data);
-            } catch (err) {
-                console.log("Servidor offline, rodando modo demo.");
+        async function login() {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('pass').value;
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email, senha })
+            });
+            const data = await res.json();
+            if(data.token) {
+                localStorage.setItem('v-token', data.token);
+                showDashboard(data);
             }
         }
-        loadTasks();
+
+        function showDashboard(user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('welcome').innerText = `Olá, ${user.nome}`;
+            document.getElementById('role-tag').innerText = `Cargo: ${user.role}`;
+            
+            if(user.role === 'admin' || user.role === 'direcao') {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
+        }
+
+        async function updateRole() {
+            const targetEmail = document.getElementById('targetEmail').value;
+            const newRole = document.getElementById('newRole').value;
+            const token = localStorage.getItem('v-token');
+            const res = await fetch('/api/admin/update-role', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ targetEmail, newRole, token })
+            });
+            alert(await res.text());
+        }
     </script>
 </body>
 </html>
