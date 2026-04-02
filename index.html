@@ -2,220 +2,163 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex | Platform</title>
+    <title>Vertex | Social & Academic</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; --sidebar-w: 260px; }
+        :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); display: flex; }
+        
+        #sidebar { width: 260px; height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; }
+        .nav-item { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; color: #888; }
+        .nav-item.active { background: #151515; color: var(--primary); }
 
-        /* AUTH SECTION */
-        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        .auth-box { background: var(--card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; color: #fff; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-
-        /* SIDEBAR */
-        #sidebar { width: var(--sidebar-w); height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; display: none; flex-direction: column; }
-        .nav-item { padding: 12px; margin: 4px 0; border-radius: 8px; cursor: pointer; color: #888; transition: 0.2s; }
-        .nav-item:hover, .nav-item.active { background: #151515; color: var(--primary); font-weight: bold; }
-
-        /* MAIN CONTENT */
-        main { margin-left: var(--sidebar-w); padding: 40px; display: none; }
+        main { margin-left: 260px; padding: 40px; width: 100%; }
         .view { display: none; }
         .view.active { display: block; }
 
         .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .av2-banner { background: linear-gradient(90deg, #ff4444, #b82e2e); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
         
-        /* GRADES TABLE */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
-        .grade-input { width: 50px; background: transparent; border: none; color: gold; text-align: center; }
+        /* FORUM STYLES */
+        .vote-btn { background: #222; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .reply-box { margin-top: 15px; border-left: 2px solid var(--primary); padding-left: 15px; }
+        .reply-input { background: #1a1a1a; border: 1px solid #333; color: #fff; width: 80%; padding: 5px; border-radius: 4px; }
+
+        /* GRADE TABLE */
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid var(--border); padding: 12px; text-align: center; }
+        th { background: #1a1a1a; }
+        .pdf-btn { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-container">
-        <div id="auth-form" class="auth-box">
-            <h2 id="auth-title" style="margin-bottom:20px; color:var(--primary);">Vertex Login</h2>
-            <div id="register-fields" style="display:none">
-                <input type="text" id="nome" placeholder="Nome Completo">
-                <input type="text" id="turma" placeholder="Turma (ex: 8B)">
-            </div>
-            <input type="email" id="email" placeholder="E-mail">
-            <input type="password" id="pass" placeholder="Senha">
-            <button onclick="handleAuth()" id="auth-btn">Entrar</button>
-            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer" onclick="toggleAuthMode()" id="auth-toggle">Não tem conta? Registrar</p>
-        </div>
-    </div>
-
     <nav id="sidebar">
-        <h1 style="color:var(--primary); margin-bottom:40px; font-size:1.5rem;">VERTEX</h1>
-        <div class="nav-item active" onclick="switchView('home')">🏠 Início</div>
-        <div class="nav-item" onclick="switchView('grades')">📊 Notas (Excel)</div>
-        <div class="nav-item" onclick="switchView('forum')">💬 Fórum Alunos</div>
-        <div class="nav-item" style="margin-top:auto; color:#ff4444" onclick="logout()">🚪 Sair</div>
+        <h2 style="color:var(--primary); margin-bottom:30px;">VERTEX</h2>
+        <div class="nav-item active" onclick="switchView('home')">🏠 Mural</div>
+        <div class="nav-item" onclick="switchView('grades')">📊 Minhas Notas</div>
+        <div class="nav-item" onclick="switchView('forum')">💬 Fórum</div>
+        <div class="nav-item" style="margin-top:auto; color:#ff4444" onclick="logout()">Logout</div>
     </nav>
 
     <main id="main-screen">
-        <header style="margin-bottom:40px;">
-            <h2 id="welcome-msg">Olá, Usuário</h2>
-            <span id="role-badge" style="font-size:0.7rem; background:rgba(0,123,255,0.1); color:var(--primary); padding:4px 8px; border-radius:5px;">ALUNO</span>
-        </header>
-
-        <section id="view-home" class="view active">
-            <div id="av2-banner" class="av2-banner">⚠️ SEMANA DE PROVAS: Estude pelos materiais do Vertex!</div>
-            <div id="professor-panel" class="card" style="display:none; border-color:#28a745">
-                <h3>Postar Atividade</h3>
-                <input type="text" id="t-materia" placeholder="Matéria">
-                <input type="text" id="t-titulo" placeholder="Título">
-                <input type="date" id="t-data">
-                <button onclick="postTask()" style="background:#28a745">Publicar</button>
-            </div>
-            <h3>Mural de Atividades</h3>
-            <div id="task-list" style="margin-top:15px;"></div>
-        </section>
-
         <section id="view-grades" class="view">
-            <h3>Calculadora de Médias</h3>
-            <table>
-                <thead><tr><th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th></tr></thead>
-                <tbody id="grade-table"></tbody>
-            </table>
+            <div id="grade-report">
+                <h2 style="margin-bottom:10px;">Boletim Oficial</h2>
+                <p id="student-info" style="color:#888; margin-bottom:20px;"></p>
+                <table>
+                    <thead><tr><th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th></tr></thead>
+                    <tbody id="official-grades"></tbody>
+                </table>
+            </div>
+            <button class="pdf-btn" onclick="downloadPDF()">⬇️ Baixar PDF do Boletim</button>
         </section>
 
         <section id="view-forum" class="view">
             <div class="card">
-                <h3>Novo Tópico</h3>
-                <input type="text" id="f-title" placeholder="Título">
-                <textarea id="f-content" style="width:100%; background:#1a1a1a; color:white; border:1px solid #222; border-radius:8px; padding:10px; margin:10px 0;" placeholder="Sua dúvida..."></textarea>
-                <button onclick="postThread()">Postar</button>
+                <h3>Criar Novo Tópico</h3>
+                <input type="text" id="f-title" placeholder="Título do debate">
+                <textarea id="f-content" style="width:100%; height:60px; background:#1a1a1a; color:#fff; border:1px solid #333; margin:10px 0; padding:10px; border-radius:8px;"></textarea>
+                <button onclick="postThread()">Publicar</button>
             </div>
-            <div id="forum-list"></div>
+            <div id="forum-container"></div>
+        </section>
+
+        <section id="view-home" class="view active">
+            <h1>Mural da Turma</h1>
+            <div id="task-list"></div>
         </section>
     </main>
 
     <script>
-        let isLogin = true;
-        const subjects = ["Matemática", "Português", "Física", "Química", "História", "Inglês"];
-
-        window.onload = () => {
-            const user = localStorage.getItem('v-user');
-            if(user) showDashboard(JSON.parse(user));
-            setupGrades();
-            if(new Date().getMonth() === 3) document.getElementById('av2-banner').style.display = 'block'; // April
-        };
-
-        function toggleAuthMode() {
-            isLogin = !isLogin;
-            document.getElementById('auth-title').innerText = isLogin ? 'Vertex Login' : 'Criar Conta';
-            document.getElementById('register-fields').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-btn').innerText = isLogin ? 'Entrar' : 'Registrar';
-            document.getElementById('auth-toggle').innerText = isLogin ? 'Não tem conta? Registrar' : 'Já tem conta? Login';
-        }
-
-        async function handleAuth() {
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('pass').value;
-            const nome = document.getElementById('nome').value;
-            const turma = document.getElementById('turma').value;
-
-            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-            const body = isLogin ? { email, senha } : { nome, email, senha, turma };
-
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
-            });
-
-            if(res.ok) {
-                if(isLogin) {
-                    const user = await res.json();
-                    localStorage.setItem('v-user', JSON.stringify(user));
-                    localStorage.setItem('v-token', user.token);
-                    showDashboard(user);
-                } else { alert("Conta criada! Agora faça o login."); toggleAuthMode(); }
-            } else { alert("Erro na autenticação."); }
-        }
-
-        function showDashboard(user) {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('sidebar').style.display = 'flex';
-            document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('welcome-msg').innerText = `Olá, ${user.nome}`;
-            document.getElementById('role-badge').innerText = user.role.toUpperCase();
-            
-            if(['professor', 'admin', 'direcao'].includes(user.role)) 
-                document.getElementById('professor-panel').style.display = 'block';
-            
-            loadTasks();
-        }
+        const token = localStorage.getItem('v-token');
 
         function switchView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if(id === 'grades') loadOfficialGrades();
             if(id === 'forum') loadForum();
         }
 
-        async function loadTasks() {
-            const res = await fetch('/api/tasks');
-            const tasks = await res.json();
-            document.getElementById('task-list').innerHTML = tasks.map(t => `
-                <div class="card"><strong>${t.materia}</strong>: ${t.titulo} <br><small>Entrega: ${t.dataEntrega}</small></div>
+        // --- GRADES & PDF ---
+        async function loadOfficialGrades() {
+            const res = await fetch('/api/my-grades', { headers: {'Authorization': token} });
+            const grades = await res.json();
+            const user = JSON.parse(localStorage.getItem('v-user'));
+            document.getElementById('student-info').innerText = `${user.nome} | Turma: ${user.turma}`;
+            
+            const body = document.getElementById('official-grades');
+            body.innerHTML = grades.map(g => `
+                <tr>
+                    <td>${g.materia}</td>
+                    <td>${g.av1}</td>
+                    <td>${g.av2}</td>
+                    <td style="color:gold; font-weight:bold">${((g.av1 + g.av2)/2).toFixed(1)}</td>
+                </tr>
             `).join('');
         }
 
-        function setupGrades() {
-            const table = document.getElementById('grade-table');
-            subjects.forEach(s => {
-                table.innerHTML += `<tr><td>${s}</td>
-                <td><input type="number" class="grade-input" oninput="calc(this)"></td>
-                <td><input type="number" class="grade-input" oninput="calc(this)"></td>
-                <td class="res">0.0</td></tr>`;
-            });
+        function downloadPDF() {
+            const element = document.getElementById('grade-report');
+            const opt = { margin: 1, filename: 'Boletim_Vertex.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
         }
 
-        function calc(el) {
-            const row = el.closest('tr');
-            const n1 = parseFloat(row.cells[1].children[0].value) || 0;
-            const n2 = parseFloat(row.cells[2].children[0].value) || 0;
-            row.cells[3].innerText = ((n1 + n2) / 2).toFixed(1);
-        }
-
+        // --- FORUM & SOCIAL ---
         async function loadForum() {
             const res = await fetch('/api/forum');
             const threads = await res.json();
-            document.getElementById('forum-list').innerHTML = threads.map(t => `
-                <div class="card"><h4>${t.titulo}</h4><p>${t.conteudo}</p><small>${t.autor} - ${t.turma}</small></div>
+            const container = document.getElementById('forum-container');
+            container.innerHTML = threads.map(t => `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between">
+                        <h4>${t.titulo}</h4>
+                        <button class="vote-btn" onclick="vote('${t._id}')">🔼 ${t.upvotes.length}</button>
+                    </div>
+                    <p style="margin:10px 0; color:#ccc">${t.conteudo}</p>
+                    <small style="color:var(--primary)">Postado por: ${t.autor}</small>
+                    
+                    <div class="replies" id="replies-${t._id}">
+                        ${t.replies.map(r => `<div class="reply-box"><small><b>${r.autor}:</b> ${r.texto}</small></div>`).join('')}
+                    </div>
+                    
+                    <div style="margin-top:10px;">
+                        <input type="text" id="input-${t._id}" class="reply-input" placeholder="Escreva um comentário...">
+                        <button onclick="reply('${t._id}')">Enviar</button>
+                    </div>
+                </div>
             `).join('');
+        }
+
+        async function vote(threadId) {
+            await fetch('/api/forum/vote', { 
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ threadId, token }) 
+            });
+            loadForum();
+        }
+
+        async function reply(threadId) {
+            const texto = document.getElementById(`input-${threadId}`).value;
+            await fetch('/api/forum/reply', { 
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ threadId, texto, token }) 
+            });
+            loadForum();
         }
 
         async function postThread() {
             const titulo = document.getElementById('f-title').value;
             const conteudo = document.getElementById('f-content').value;
-            const token = localStorage.getItem('v-token');
-            await fetch('/api/forum', {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({titulo, conteudo, token})
+            await fetch('/api/forum', { 
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ titulo, conteudo, token }) 
             });
             loadForum();
         }
 
-        async function postTask() {
-            const body = {
-                materia: document.getElementById('t-materia').value,
-                titulo: document.getElementById('t-titulo').value,
-                dataEntrega: document.getElementById('t-data').value,
-                token: localStorage.getItem('v-token')
-            };
-            await fetch('/api/tasks', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-            loadTasks();
-        }
-
+        // --- AUTH & OTHER LOGIC ---
+        // [Add your login/showDashboard logic here]
         function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
