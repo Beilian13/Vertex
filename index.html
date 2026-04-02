@@ -64,13 +64,64 @@
             </div>
         </div>
 
-        <div id="view-admin" class="view"><h3>Master</h3><div id="admin-users-list"></div></div>
+        <div id="view-gestao" class="view">
+            <h3>Gestão</h3>
+            
+            <div id="gestao-noticias" style="display:none">
+                <div class="glass">
+                    <h4>Criar Notícia</h4>
+                    <input id="n-tit" placeholder="Título da Notícia">
+                    <textarea id="n-con" placeholder="Conteúdo"></textarea>
+                    <div style="border: 1px dashed var(--border); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                        <p style="font-size:10px; color:var(--dim)">ENQUETE (Opcional)</p>
+                        <input id="n-enq-p" placeholder="Pergunta">
+                        <input id="n-enq-o" placeholder="Opções (ex: Sim, Não)">
+                    </div>
+                    <button class="btn" onclick="criarNoticia()">PUBLICAR NOTÍCIA</button>
+                </div>
+            </div>
+
+            <div id="gestao-tarefas" style="display:none">
+                <div class="glass">
+                    <h4>Criar Tarefa</h4>
+                    <input id="t-mat" placeholder="Matéria">
+                    <input id="t-tit" placeholder="Título da Tarefa">
+                    <textarea id="t-desc" placeholder="Descrição"></textarea>
+                    <input id="t-data" type="date">
+                    <button class="btn" onclick="criarTarefa()">CRIAR TAREFA</button>
+                </div>
+            </div>
+
+            <div id="gestao-ocorrencias" style="display:none">
+                <div class="glass">
+                    <h4>Registrar Ocorrência</h4>
+                    <input id="o-aluno" placeholder="Nome do Aluno">
+                    <select id="o-tipo" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px;">
+                        <option value="Advertência">Advertência</option>
+                        <option value="Suspensão">Suspensão</option>
+                        <option value="Elogio">Elogio</option>
+                        <option value="Observação">Observação</option>
+                    </select>
+                    <textarea id="o-desc" placeholder="Descrição"></textarea>
+                    <button class="btn" onclick="criarOcorrencia()">REGISTRAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-admin" class="view">
+            <h3>Master Panel</h3>
+            <div class="glass">
+                <h4>Gerenciar Usuários</h4>
+                <div id="admin-users-list"></div>
+            </div>
+        </div>
 
         <nav>
             <div class="nav-item active" onclick="switchView('home')">Início</div>
             <div class="nav-item" onclick="switchView('atividades')">Tarefas</div>
             <div class="nav-item" onclick="switchView('ocorrencias')">Ocorrências</div>
             <div class="nav-item" onclick="switchView('forum')">Fórum</div>
+            <div id="nav-gestao" class="nav-item" onclick="switchView('gestao')" style="display:none; color:#00d4ff">Gestão</div>
             <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none; color:gold">Master</div>
             <div class="nav-item" onclick="logout()" style="color:var(--danger)">Sair</div>
         </nav>
@@ -93,7 +144,29 @@
         function initApp(u) {
             document.getElementById('auth-page').style.display = 'none'; document.getElementById('app-shell').style.display = 'block';
             document.getElementById('user-avatar').src = u.avatar; document.getElementById('user-name-label').innerText = u.nome; document.getElementById('user-role-label').innerText = u.role;
-            if(u.role === 'Admin') document.getElementById('nav-admin').style.display = 'block';
+            
+            // Admin: tudo
+            if(u.role === 'Admin') {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-gestao').style.display = 'block';
+                document.getElementById('gestao-noticias').style.display = 'block';
+                document.getElementById('gestao-tarefas').style.display = 'block';
+                document.getElementById('gestao-ocorrencias').style.display = 'block';
+            }
+            // Direção: notícias, ocorrências, tarefas
+            else if(u.role === 'Direcao') {
+                document.getElementById('nav-gestao').style.display = 'block';
+                document.getElementById('gestao-noticias').style.display = 'block';
+                document.getElementById('gestao-tarefas').style.display = 'block';
+                document.getElementById('gestao-ocorrencias').style.display = 'block';
+            }
+            // Professor: tarefas e ocorrências
+            else if(u.role === 'Professor') {
+                document.getElementById('nav-gestao').style.display = 'block';
+                document.getElementById('gestao-tarefas').style.display = 'block';
+                document.getElementById('gestao-ocorrencias').style.display = 'block';
+            }
+            
             switchView('home');
         }
 
@@ -137,16 +210,101 @@
         async function comentar(id) { const txt = document.getElementById('in-'+id).value; await api('/api/forum/comentar/'+id, 'POST', { texto: txt }); loadForum(); }
         async function votar(id, idx) { await api('/api/forum/votar/'+id, 'POST', { opcaoIndex: idx }); loadForum(); }
 
-        async function loadNoticias() { const d = await api('/api/noticias'); if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `<div class="glass"><b>${n.titulo}</b><br><small>${n.autor}</small></div>`).join(''); }
-        async function loadAtividades() { const d = await api('/api/atividades'); if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass"><b>${a.materia}</b>: ${a.titulo}</div>`).join(''); }
-        async function loadOcorrencias() { const d = await api('/api/ocorrencias'); if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid gold"><b>${o.alunoNome}</b>: ${o.descricao}</div>`).join(''); }
+        async function criarNoticia() {
+            const b = { titulo: document.getElementById('n-tit').value, conteudo: document.getElementById('n-con').value };
+            if(document.getElementById('n-enq-p').value) b.enquete = { pergunta: document.getElementById('n-enq-p').value, opcoes: document.getElementById('n-enq-o').value.split(',').map(s => s.trim()) };
+            await api('/api/noticias', 'POST', b);
+            document.getElementById('n-tit').value = ''; document.getElementById('n-con').value = ''; document.getElementById('n-enq-p').value = ''; document.getElementById('n-enq-o').value = '';
+            loadNoticias();
+        }
+
+        async function criarTarefa() {
+            await api('/api/atividades', 'POST', { 
+                materia: document.getElementById('t-mat').value, 
+                titulo: document.getElementById('t-tit').value,
+                descricao: document.getElementById('t-desc').value,
+                dataEntrega: document.getElementById('t-data').value
+            });
+            document.getElementById('t-mat').value = ''; document.getElementById('t-tit').value = ''; document.getElementById('t-desc').value = ''; document.getElementById('t-data').value = '';
+            loadAtividades();
+        }
+
+        async function criarOcorrencia() {
+            await api('/api/ocorrencias', 'POST', {
+                alunoNome: document.getElementById('o-aluno').value,
+                tipo: document.getElementById('o-tipo').value,
+                descricao: document.getElementById('o-desc').value
+            });
+            document.getElementById('o-aluno').value = ''; document.getElementById('o-desc').value = '';
+            loadOcorrencias();
+        }
+
+        async function loadAdminUsers() {
+            const users = await api('/api/admin/users');
+            if(users) document.getElementById('admin-users-list').innerHTML = users.map(u => `
+                <div class="glass" style="display:flex; justify-content:space-between; align-items:center; padding:15px">
+                    <div>
+                        <b>${u.nome}</b><br>
+                        <small style="color:var(--dim)">${u.email}</small><br>
+                        <span style="color:var(--primary); font-size:10px; font-weight:800">${u.role}</span>
+                    </div>
+                    <div>
+                        <select id="role-${u._id}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px; margin-right:5px; font-size:11px">
+                            <option ${u.role === 'Aluno' ? 'selected' : ''}>Aluno</option>
+                            <option ${u.role === 'Professor' ? 'selected' : ''}>Professor</option>
+                            <option ${u.role === 'Direcao' ? 'selected' : ''}>Direcao</option>
+                            <option ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                        <button class="btn" style="width:auto; padding:8px 15px; font-size:10px" onclick="updateRole('${u._id}')">ATUALIZAR</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateRole(userId) {
+            const newRole = document.getElementById('role-'+userId).value;
+            await api('/api/admin/update-role', 'POST', { userId, role: newRole });
+            loadAdminUsers();
+        }
+
+        async function loadNoticias() { const d = await api('/api/noticias'); if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `
+            <div class="glass">
+                <b>${n.titulo}</b>
+                <p style="font-size:12px; margin:10px 0">${n.conteudo || ''}</p>
+                <small style="color:var(--dim)">por ${n.autor}</small>
+                ${n.temEnquete ? `
+                    <div style="margin-top:15px; padding:10px; background:rgba(0,112,255,0.1); border-radius:10px">
+                        <b style="font-size:11px">${n.enquete.pergunta}</b>
+                        ${n.enquete.opcoes.map((o, idx) => `
+                            <div class="poll-opt" onclick="votarNoticia('${n._id}', ${idx})">
+                                ${o.texto} <span style="float:right; color:var(--primary)">${o.votos} votos</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                <div style="margin-top:15px">
+                    ${(n.comentarios || []).map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
+                    <input id="nc-in-${n._id}" placeholder="Comentar..." style="margin-top:10px">
+                    <button class="btn" onclick="comentarNoticia('${n._id}')">ENVIAR</button>
+                </div>
+            </div>
+        `).join(''); }
+        async function comentarNoticia(id) { const txt = document.getElementById('nc-in-'+id).value; await api('/api/noticias/comentar/'+id, 'POST', { texto: txt }); loadNoticias(); }
+        async function votarNoticia(id, idx) { await api('/api/noticias/votar/'+id, 'POST', { opcaoIndex: idx }); loadNoticias(); }
+        
+        async function loadAtividades() { const d = await api('/api/atividades'); if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass"><b>${a.materia}</b>: ${a.titulo}<br><small style="color:var(--dim)">Entrega: ${new Date(a.dataEntrega).toLocaleDateString('pt-BR')}</small></div>`).join(''); }
+        async function loadOcorrencias() { const d = await api('/api/ocorrencias'); if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid ${o.tipo === 'Advertência' ? '#ff3366' : o.tipo === 'Elogio' ? '#00ff88' : 'gold'}"><b>${o.alunoNome}</b> - ${o.tipo}<br><small>${o.descricao}</small><br><small style="color:var(--dim)">por ${o.autor}</small></div>`).join(''); }
 
         function switchView(v) {
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
             document.getElementById('view-'+v).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(x => { if(x.onclick && x.onclick.toString().includes(`'${v}'`)) x.classList.add('active'); });
-            if(v === 'home') loadNoticias(); if(v === 'atividades') loadAtividades(); if(v === 'ocorrencias') loadOcorrencias(); if(v === 'forum') loadForum();
+            if(v === 'home') loadNoticias(); 
+            if(v === 'atividades') loadAtividades(); 
+            if(v === 'ocorrencias') loadOcorrencias(); 
+            if(v === 'forum') loadForum();
+            if(v === 'admin') loadAdminUsers();
         }
 
         function logout() { localStorage.clear(); location.reload(); }
