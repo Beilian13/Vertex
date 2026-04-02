@@ -3,211 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex Pro | Gestão de Elite</title>
+    <title>Vertex | Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { 
-            --accent: #00d2ff; 
-            --accent-glow: rgba(0, 210, 255, 0.3);
-            --bg: #030303; 
-            --card-bg: rgba(20, 20, 20, 0.7);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
-            --text-dim: #a0a0a0;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: default; }
+        :root { --accent: #00d2ff; --bg: #030303; --card: rgba(20, 20, 20, 0.7); --border: rgba(255, 255, 255, 0.1); --text: #eee; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden; 
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
             background-image: radial-gradient(circle at 50% -20%, #112244 0%, transparent 50%);
+            min-height: 100vh; overflow-x: hidden;
         }
 
-        /* --- UI GLASSMORPHISM --- */
-        .glass { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid var(--border); 
-            border-radius: 20px; 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-        }
+        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; }
 
-        /* --- AUTH SCREEN --- */
-        #auth-container { height: 100vh; display: flex; align-items: center; justify-content: center; background: url('https://w.wallhaven.cc/full/ex/wallhaven-ex96pw.png') no-repeat center center/cover; }
+        /* AUTH */
+        #auth-container { height: 100vh; display: flex; align-items: center; justify-content: center; }
         .auth-card { width: 400px; padding: 40px; text-align: center; }
-        .auth-card h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; margin-bottom: 30px; letter-spacing: -2px; color: var(--accent); }
-        
-        input { 
-            width: 100%; padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); 
-            border: 1px solid var(--border); border-radius: 12px; color: #fff; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); outline: none; background: rgba(255,255,255,0.1); }
+        input, textarea { width: 100%; padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--accent); }
+        .btn-prime { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .btn-prime:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3); }
 
-        .btn-prime { 
-            width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; 
-            border-radius: 12px; font-weight: 800; text-transform: uppercase; margin-top: 20px; transition: 0.3s;
-        }
-        .btn-prime:hover { transform: translateY(-3px); box-shadow: 0 10px 20px var(--accent-glow); filter: brightness(1.1); }
-
-        /* --- SIDEBAR --- */
-        #sidebar { 
-            width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: none; 
-            flex-direction: column; padding: 30px; z-index: 1000;
-        }
-        .nav-link { 
-            padding: 15px 20px; margin: 8px 0; border-radius: 12px; transition: 0.3s; 
-            color: var(--text-dim); display: flex; align-items: center; font-weight: 500;
-        }
-        .nav-link:hover, .nav-link.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
-
-        /* --- MAIN DASHBOARD --- */
-        main { margin-left: 320px; padding: 40px; display: none; min-height: 100vh; }
-        .section-title { font-family: 'Poppins'; font-size: 2.2rem; margin-bottom: 10px; }
-        .view { display: none; animation: fadeIn 0.5s ease forwards; }
+        /* LAYOUT */
+        #sidebar { width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: none; flex-direction: column; padding: 30px; }
+        .nav-link { padding: 15px; margin: 5px 0; border-radius: 12px; cursor: pointer; color: #888; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); font-weight: bold; }
+        main { margin-left: 320px; padding: 40px; display: none; }
+        .view { display: none; animation: fadeIn 0.4s ease; }
         .view.active { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .widget { padding: 25px; margin-bottom: 25px; transition: 0.3s; }
-        .widget:hover { border-color: var(--accent); }
+        /* FORUM & BRANCHES */
+        .thread-card { padding: 25px; margin-bottom: 20px; cursor: pointer; transition: 0.3s; }
+        .branch { border-left: 2px solid #333; margin-left: 25px; padding-left: 20px; margin-top: 15px; }
+        .reply-meta { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; }
+        .reply-btn { background: none; border: none; color: #666; cursor: pointer; font-size: 0.7rem; text-decoration: underline; }
 
-        /* --- FORUM & GRADES --- */
-        .thread-card { border-left: 4px solid var(--accent); margin-bottom: 20px; }
-        .grade-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .grade-table th { color: var(--accent); text-transform: uppercase; font-size: 0.75rem; padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
-        .grade-table td { padding: 15px; border-bottom: 1px solid var(--border); }
-        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; background: rgba(0, 255, 127, 0.1); color: #00ff7f; }
-
-        /* --- CUSTOM CURSOR --- */
-        .cursor { width: 20px; height: 20px; border: 2px solid var(--accent); border-radius: 50%; position: fixed; pointer-events: none; transition: transform 0.1s; z-index: 9999; mix-blend-mode: difference; }
+        /* GRADES */
+        .grade-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .grade-table td, .grade-table th { padding: 15px; border-bottom: 1px solid var(--border); text-align: left; }
     </style>
 </head>
 <body>
 
-    <div class="cursor" id="cursor"></div>
-
     <div id="auth-container">
         <div class="auth-card glass">
-            <h1>VERTEX</h1>
+            <h1 style="font-family:'Poppins'; color:var(--accent); font-size:2.5rem; margin-bottom:20px;">VERTEX</h1>
             <div id="reg-fields" style="display:none">
                 <input type="text" id="reg-nome" placeholder="Nome Completo">
-                <input type="text" id="reg-turma" placeholder="Turma (ex: 8º Ano B)">
+                <input type="text" id="reg-turma" placeholder="Turma">
             </div>
-            <input type="email" id="email" placeholder="Email Institucional">
+            <input type="email" id="email" placeholder="E-mail">
             <input type="password" id="pass" placeholder="Senha">
-            <button class="btn-prime" onclick="handleAuth()" id="auth-btn">Acessar Sistema</button>
-            <p onclick="toggleAuth()" style="margin-top:20px; color:var(--text-dim); font-size:0.8rem; cursor:pointer">Não tem conta? <span style="color:var(--accent)">Crie agora</span></p>
+            <button class="btn-prime" onclick="handleAuth()" id="auth-btn">Entrar</button>
+            <p onclick="toggleAuth()" style="margin-top:20px; font-size:0.8rem; cursor:pointer; color:#666">Trocar Login/Registro</p>
         </div>
     </div>
 
     <nav id="sidebar" class="glass">
-        <div style="margin-bottom: 50px;">
-            <h2 style="font-family:'Poppins'; letter-spacing:-1px;">Vertex <span style="color:var(--accent)">Pro</span></h2>
-        </div>
-        <div class="nav-link active" onclick="switchView('home')">🏠 Dashboard</div>
-        <div class="nav-item nav-link" onclick="switchView('grades')">📊 Boletim Oficial</div>
-        <div class="nav-item nav-link" onclick="switchView('forum')">💬 Fórum da Turma</div>
-        <div class="nav-item nav-link" onclick="switchView('materials')">📁 Repositório</div>
-        
-        <div style="margin-top:auto">
-            <div class="nav-link" onclick="logout()" style="color:#ff4b4b">🚪 Finalizar Sessão</div>
-        </div>
+        <h2 style="font-family:'Poppins'; color:var(--accent); margin-bottom:40px;">VERTEX</h2>
+        <div class="nav-link active" onclick="switchView('home')">🏠 Mural</div>
+        <div class="nav-link" onclick="switchView('grades')">📊 Boletim PDF</div>
+        <div class="nav-link" onclick="switchView('forum')">💬 Fórum Turma</div>
+        <div class="nav-link" onclick="logout()" style="margin-top:auto; color:#ff4b4b">🚪 Sair</div>
     </nav>
 
     <main id="main-screen">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
-            <div>
-                <p id="date-now" style="color:var(--text-dim); font-size:0.9rem;"></p>
-                <h2 id="user-welcome" class="section-title">Bem-vindo</h2>
-            </div>
-            <input type="text" placeholder="🔍 Pesquisa rápida..." oninput="search(this.value)" style="width:250px; margin:0;">
+            <h2 id="welcome-msg" style="font-family:'Poppins'; font-size:2rem;">Dashboard</h2>
+            <input type="text" placeholder="🔍 Pesquisa Global..." oninput="search(this.value)" style="width:250px; margin:0;">
         </div>
 
         <section id="view-home" class="view active">
-            <div id="prof-panel" class="widget glass" style="display:none; border-color:#00ff7f">
-                <h3 style="margin-bottom:15px">📢 Nova Atividade</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                    <input type="text" id="t-mat" placeholder="Matéria">
-                    <input type="text" id="t-tit" placeholder="Título">
-                    <input type="date" id="t-date">
-                </div>
-                <button class="btn-prime" onclick="postTask()" style="background:#00ff7f">Publicar Agora</button>
-            </div>
-            <h3 style="margin-bottom:20px;">📌 Mural de Avisos</h3>
             <div id="task-list"></div>
         </section>
 
         <section id="view-grades" class="view">
-            <div id="pdf-content" class="widget glass">
-                <h2 style="margin-bottom:20px;">Boletim Escolar Digital</h2>
+            <div id="pdf-area" class="glass" style="padding:30px;">
+                <h2>Relatório de Desempenho</h2>
                 <table class="grade-table">
-                    <thead><tr><th>Disciplina</th><th>AV1</th><th>AV2</th><th>Média Final</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th></tr></thead>
                     <tbody id="grade-body"></tbody>
                 </table>
             </div>
-            <button class="btn-prime" onclick="exportPDF()" style="background:#dc3545; color:white;">💾 Exportar PDF Oficial</button>
+            <button class="btn-prime" onclick="exportPDF()" style="margin-top:20px; background:#dc3545; color:white;">Baixar Boletim PDF</button>
         </section>
 
         <section id="view-forum" class="view">
-            <div class="widget glass">
+            <div class="glass" style="padding:20px; margin-bottom:20px;">
                 <h3>Novo Tópico</h3>
                 <input type="text" id="f-tit" placeholder="Assunto">
-                <textarea id="f-con" placeholder="Explique seu ponto..."></textarea>
-                <button class="btn-prime" onclick="postThread()">Criar Tópico</button>
+                <textarea id="f-con" placeholder="Escreva aqui..."></textarea>
+                <button class="btn-prime" onclick="postThread()">Publicar</button>
             </div>
             <div id="forum-list"></div>
+        </section>
+
+        <section id="view-thread-detail" class="view">
+            <button onclick="switchView('forum')" style="background:none; border:none; color:var(--accent); cursor:pointer; margin-bottom:20px;">← Voltar</button>
+            <div id="thread-header" class="glass" style="padding:30px; margin-bottom:30px;"></div>
+            <h3>Discussão</h3>
+            <div id="comment-tree"></div>
+            <div class="glass" style="padding:20px; margin-top:30px;">
+                <textarea id="main-reply-text" placeholder="Responder ao tópico..."></textarea>
+                <button class="btn-prime" onclick="postReply(null)">Enviar</button>
+            </div>
         </section>
     </main>
 
     <script>
-        const cursor = document.getElementById('cursor');
-        document.addEventListener('mousemove', e => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
-
         let isLogin = true;
+        let currentThreadId = null;
         const token = () => localStorage.getItem('v-token');
 
         window.onload = () => {
             const user = localStorage.getItem('v-user');
             if(user) showDashboard(JSON.parse(user));
-            document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long'});
         };
 
         function toggleAuth() {
             isLogin = !isLogin;
             document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-btn').innerText = isLogin ? 'Acessar Sistema' : 'Criar Conta Vertex';
+            document.getElementById('auth-btn').innerText = isLogin ? 'Entrar' : 'Registrar';
         }
 
         async function handleAuth() {
             const body = isLogin ? { email: email.value, senha: pass.value } : 
                          { nome: document.getElementById('reg-nome').value, email: email.value, senha: pass.value, turma: document.getElementById('reg-turma').value };
-            
-            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', {
-                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
-            });
-
-            if(res.ok) {
-                if(isLogin) {
-                    const data = await res.json();
-                    localStorage.setItem('v-user', JSON.stringify(data));
-                    localStorage.setItem('v-token', data.token);
-                    showDashboard(data);
-                } else { alert("Conta Vertex criada!"); toggleAuth(); }
-            } else { alert("Verifique suas credenciais."); }
+            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+            if(res.ok && isLogin) {
+                const data = await res.json();
+                localStorage.setItem('v-user', JSON.stringify(data));
+                localStorage.setItem('v-token', data.token);
+                showDashboard(data);
+            } else if(res.ok) { alert("Conta Criada!"); toggleAuth(); }
         }
 
         function showDashboard(user) {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('sidebar').style.display = 'flex';
             document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('user-welcome').innerText = `Olá, ${user.nome.split(' ')[0]} 👋`;
-            if(['professor', 'admin'].includes(user.role)) document.getElementById('prof-panel').style.display = 'block';
+            document.getElementById('welcome-msg').innerText = `Olá, ${user.nome.split(' ')[0]}`;
             loadTasks();
         }
 
@@ -215,60 +152,65 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
-            event.currentTarget.classList.add('active');
             if(id === 'grades') loadGrades();
             if(id === 'forum') loadForum();
         }
 
         async function loadTasks() {
             const tasks = await (await fetch('/api/tasks')).json();
-            document.getElementById('task-list').innerHTML = tasks.map(t => `
-                <div class="widget glass thread-card">
-                    <span class="status-pill" style="background:rgba(0, 210, 255, 0.1); color:var(--accent)">${t.materia}</span>
-                    <h4 style="margin-top:10px;">${t.titulo}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-dim); margin-top:5px;">📅 Entrega: ${new Date(t.dataEntrega).toLocaleDateString()}</p>
-                </div>
-            `).join('');
+            document.getElementById('task-list').innerHTML = tasks.map(t => `<div class="glass thread-card"><b>${t.materia}</b>: ${t.titulo}<br><small>📅 ${t.dataEntrega}</small></div>`).join('');
         }
 
         async function loadGrades() {
-            const grades = await (await fetch('/api/my-grades', { headers: {'Authorization': token()} })).json();
-            document.getElementById('grade-body').innerHTML = grades.map(g => {
-                const media = (g.av1 + g.av2) / 2;
-                return `<tr>
-                    <td><b>${g.materia}</b></td>
-                    <td>${g.av1}</td>
-                    <td>${g.av2}</td>
-                    <td style="color:var(--accent)">${media.toFixed(1)}</td>
-                    <td><span class="status-pill" style="background:${media >= 6 ? 'rgba(0,255,127,0.1)' : 'rgba(255,75,75,0.1)'}; color:${media >= 6 ? '#00ff7f' : '#ff4b4b'}">
-                        ${media >= 6 ? 'Aprovado' : 'Recuperação'}
-                    </span></td>
-                </tr>`;
-            }).join('');
+            const res = await fetch('/api/my-grades', { headers:{'Authorization': token()} });
+            const grades = await res.json();
+            document.getElementById('grade-body').innerHTML = grades.map(g => `<tr><td>${g.materia}</td><td>${g.av1}</td><td>${g.av2}</td><td style="color:var(--accent)">${((g.av1+g.av2)/2).toFixed(1)}</td></tr>`).join('');
         }
 
-        function exportPDF() {
-            html2pdf().set({ margin: 1, filename: 'Boletim_Vertex_Pro.pdf' }).from(document.getElementById('pdf-content')).save();
-        }
+        function exportPDF() { html2pdf().from(document.getElementById('pdf-area')).save('Boletim_Vertex.pdf'); }
 
         async function loadForum() {
             const threads = await (await fetch('/api/forum')).json();
-            document.getElementById('forum-list').innerHTML = threads.map(t => `
-                <div class="widget glass">
-                    <h4>${t.titulo}</h4>
-                    <p style="color:var(--text-dim); margin:10px 0;">${t.conteudo}</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <small style="color:var(--accent)">@${t.autor}</small>
-                        <button style="width:auto; padding:5px 15px; border-radius:30px; background:#111; color:white; border:1px solid #333;">🔼 ${t.upvotes.length}</button>
-                    </div>
-                </div>
-            `).join('');
+            document.getElementById('forum-list').innerHTML = threads.map(t => `<div class="glass thread-card" onclick="openThread('${t._id}')"><h4>${t.titulo}</h4><p style="color:#888">${t.conteudo.substring(0,80)}...</p></div>`).join('');
         }
 
-        function search(q) {
-            document.querySelectorAll('.widget').forEach(w => w.style.display = w.innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none');
+        async function openThread(id) {
+            currentThreadId = id;
+            const t = await (await fetch(`/api/forum/${id}`)).json();
+            switchView('thread-detail');
+            document.getElementById('thread-header').innerHTML = `<h1>${t.titulo}</h1><p>${t.conteudo}</p><br><small>Por ${t.autor}</small>`;
+            renderComments(t.replies);
         }
 
+        function renderComments(replies, parentId = null) {
+            const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
+            if(parentId === null) container.innerHTML = '';
+            replies.filter(r => r.parentId === parentId).forEach(r => {
+                const div = document.createElement('div');
+                div.className = parentId === null ? 'glass' : 'branch';
+                div.style.padding = '15px'; div.style.marginBottom = '10px';
+                div.innerHTML = `<div class="reply-meta">${r.autor}</div><div>${r.texto}</div>
+                                 <button class="reply-btn" onclick="showReplyInput('${r.id}')">Responder</button>
+                                 <div id="in-${r.id}"></div><div id="replies-${r.id}"></div>`;
+                container.appendChild(div);
+                renderComments(replies, r.id);
+            });
+        }
+
+        function showReplyInput(id) { document.getElementById(`in-${id}`).innerHTML = `<textarea id="tx-${id}"></textarea><button class="btn-prime" onclick="postReply('${id}')">Enviar</button>`; }
+
+        async function postReply(parentId) {
+            const texto = parentId ? document.getElementById(`tx-${parentId}`).value : document.getElementById('main-reply-text').value;
+            await fetch('/api/forum/reply', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ threadId: currentThreadId, texto, parentId, token: token() }) });
+            openThread(currentThreadId);
+        }
+
+        async function postThread() {
+            await fetch('/api/forum', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value, token: token() }) });
+            loadForum();
+        }
+
+        function search(q) { document.querySelectorAll('.thread-card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none'); }
         function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
