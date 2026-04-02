@@ -14,12 +14,10 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
 
-// Database Connection
 mongoose.connect(MONGO_URI)
     .then(() => console.log("🚀 Vertex Engine: Core Active"))
-    .catch(err => console.error("❌ Critical Connection Failure:", err));
+    .catch(err => console.error("❌ DB Connection Error:", err));
 
-// --- DATA MODELS ---
 const User = mongoose.model('User', new mongoose.Schema({
     nome: { type: String, required: true },
     email: { type: String, unique: true, required: true },
@@ -45,7 +43,6 @@ const Mural = mongoose.model('Mural', new mongoose.Schema({
     titulo: String, autor: String, turma: String, createdAt: { type: Date, default: Date.now }
 }));
 
-// --- SECURITY MIDDLEWARE ---
 const authorize = (roles = []) => (req, res, next) => {
     try {
         const token = req.headers.authorization;
@@ -57,7 +54,6 @@ const authorize = (roles = []) => (req, res, next) => {
     } catch (e) { res.status(401).json({ msg: "Sessão Expirada" }); }
 };
 
-// --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { nome, email, senha, turma } = req.body;
@@ -78,24 +74,20 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ msg: "Erro no Servidor" }); }
 });
 
-// --- CORE ROUTES ---
 app.get('/api/mural', authorize(), async (req, res) => res.json(await Mural.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
 app.post('/api/mural', authorize(['professor', 'direcao']), async (req, res) => {
-    const post = await Mural.create({ titulo: req.body.titulo, autor: req.user.nome, turma: req.user.turma });
-    res.json(post);
+    res.json(await Mural.create({ titulo: req.body.titulo, autor: req.user.nome, turma: req.user.turma }));
 });
 
 app.get('/api/homeworks', authorize(), async (req, res) => res.json(await Homework.find({ turma: req.user.turma }).sort({ dataEntrega: 1 })));
 app.post('/api/homeworks', authorize(['professor', 'direcao']), async (req, res) => {
-    const hw = await Homework.create({ ...req.body, autor: req.user.nome, turma: req.user.turma });
-    res.json(hw);
+    res.json(await Homework.create({ ...req.body, autor: req.user.nome, turma: req.user.turma }));
 });
 
 app.get('/api/forum', authorize(), async (req, res) => res.json(await Thread.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
 app.get('/api/forum/:id', authorize(), async (req, res) => res.json(await Thread.findById(req.params.id)));
 app.post('/api/forum', authorize(), async (req, res) => {
-    const thread = await Thread.create({ ...req.body, autor: req.user.nome, turma: req.user.turma });
-    res.json(thread);
+    res.json(await Thread.create({ ...req.body, autor: req.user.nome, turma: req.user.turma }));
 });
 
 app.post('/api/forum/reply', authorize(), async (req, res) => {
@@ -109,7 +101,5 @@ app.get('/api/me/grades', authorize(), async (req, res) => {
     res.json(user.grades || []);
 });
 
-// Wildcard Catch-all (Must be last)
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Live on Port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Engine Live`));
