@@ -2,126 +2,186 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Vertex | Gestão Escolar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertex Pro | Gestão de Elite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        :root { 
+            --accent: #00d2ff; 
+            --accent-glow: rgba(0, 210, 255, 0.3);
+            --bg: #030303; 
+            --card-bg: rgba(20, 20, 20, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+        }
 
-        /* --- AUTH --- */
-        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .auth-box { background: var(--card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 380px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; color: #fff; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: default; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; 
+            background-image: radial-gradient(circle at 50% -20%, #112244 0%, transparent 50%);
+        }
 
-        /* --- LAYOUT --- */
-        #sidebar { width: 260px; height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; display: none; flex-direction: column; }
-        .nav-item { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; color: #888; transition: 0.2s; }
-        .nav-item.active { background: #151515; color: var(--primary); font-weight: bold; }
-        main { margin-left: 260px; padding: 40px; display: none; }
-        .view { display: none; }
+        /* --- UI GLASSMORPHISM --- */
+        .glass { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid var(--border); 
+            border-radius: 20px; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        /* --- AUTH SCREEN --- */
+        #auth-container { height: 100vh; display: flex; align-items: center; justify-content: center; background: url('https://w.wallhaven.cc/full/ex/wallhaven-ex96pw.png') no-repeat center center/cover; }
+        .auth-card { width: 400px; padding: 40px; text-align: center; }
+        .auth-card h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; margin-bottom: 30px; letter-spacing: -2px; color: var(--accent); }
+        
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--border); border-radius: 12px; color: #fff; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; background: rgba(255,255,255,0.1); }
+
+        .btn-prime { 
+            width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; 
+            border-radius: 12px; font-weight: 800; text-transform: uppercase; margin-top: 20px; transition: 0.3s;
+        }
+        .btn-prime:hover { transform: translateY(-3px); box-shadow: 0 10px 20px var(--accent-glow); filter: brightness(1.1); }
+
+        /* --- SIDEBAR --- */
+        #sidebar { 
+            width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: none; 
+            flex-direction: column; padding: 30px; z-index: 1000;
+        }
+        .nav-link { 
+            padding: 15px 20px; margin: 8px 0; border-radius: 12px; transition: 0.3s; 
+            color: var(--text-dim); display: flex; align-items: center; font-weight: 500;
+        }
+        .nav-link:hover, .nav-link.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); }
+
+        /* --- MAIN DASHBOARD --- */
+        main { margin-left: 320px; padding: 40px; display: none; min-height: 100vh; }
+        .section-title { font-family: 'Poppins'; font-size: 2.2rem; margin-bottom: 10px; }
+        .view { display: none; animation: fadeIn 0.5s ease forwards; }
         .view.active { display: block; }
 
-        /* --- UI COMPONENTS --- */
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .badge { background: rgba(0,123,255,0.1); color: var(--primary); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid var(--border); padding: 12px; text-align: center; }
-        .poll-opt { background: #1a1a1a; padding: 10px; margin: 5px 0; border-radius: 8px; cursor: pointer; border: 1px solid #333; }
-        .reply-box { border-left: 2px solid var(--primary); padding-left: 15px; margin-top: 10px; font-size: 0.9rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .widget { padding: 25px; margin-bottom: 25px; transition: 0.3s; }
+        .widget:hover { border-color: var(--accent); }
+
+        /* --- FORUM & GRADES --- */
+        .thread-card { border-left: 4px solid var(--accent); margin-bottom: 20px; }
+        .grade-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .grade-table th { color: var(--accent); text-transform: uppercase; font-size: 0.75rem; padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        .grade-table td { padding: 15px; border-bottom: 1px solid var(--border); }
+        .status-pill { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; background: rgba(0, 255, 127, 0.1); color: #00ff7f; }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor { width: 20px; height: 20px; border: 2px solid var(--accent); border-radius: 50%; position: fixed; pointer-events: none; transition: transform 0.1s; z-index: 9999; mix-blend-mode: difference; }
     </style>
 </head>
 <body>
 
+    <div class="cursor" id="cursor"></div>
+
     <div id="auth-container">
-        <div class="auth-box">
-            <h2 id="auth-title" style="color:var(--primary); margin-bottom:20px;">Vertex Login</h2>
-            <div id="reg-extra" style="display:none">
+        <div class="auth-card glass">
+            <h1>VERTEX</h1>
+            <div id="reg-fields" style="display:none">
                 <input type="text" id="reg-nome" placeholder="Nome Completo">
-                <input type="text" id="reg-turma" placeholder="Turma (ex: 8º C)">
+                <input type="text" id="reg-turma" placeholder="Turma (ex: 8º Ano B)">
             </div>
-            <input type="email" id="email" placeholder="E-mail">
+            <input type="email" id="email" placeholder="Email Institucional">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="handleAuth()" id="auth-btn">Entrar</button>
-            <p onclick="toggleAuth()" style="text-align:center; font-size:0.8rem; margin-top:15px; cursor:pointer; color:#666">Trocar Login/Registro</p>
+            <button class="btn-prime" onclick="handleAuth()" id="auth-btn">Acessar Sistema</button>
+            <p onclick="toggleAuth()" style="margin-top:20px; color:var(--text-dim); font-size:0.8rem; cursor:pointer">Não tem conta? <span style="color:var(--accent)">Crie agora</span></p>
         </div>
     </div>
 
-    <nav id="sidebar">
-        <h2 style="color:var(--primary); margin-bottom:40px;">VERTEX</h2>
-        <div class="nav-item active" onclick="switchView('home')">🏠 Mural</div>
-        <div class="nav-item" onclick="switchView('grades')">📊 Boletim PDF</div>
-        <div class="nav-item" onclick="switchView('materials')">📁 Materiais</div>
-        <div class="nav-item" onclick="switchView('forum')">💬 Fórum & Enquetes</div>
-        <div class="nav-item" style="margin-top:auto; color:#ff4444" onclick="logout()">🚪 Sair</div>
+    <nav id="sidebar" class="glass">
+        <div style="margin-bottom: 50px;">
+            <h2 style="font-family:'Poppins'; letter-spacing:-1px;">Vertex <span style="color:var(--accent)">Pro</span></h2>
+        </div>
+        <div class="nav-link active" onclick="switchView('home')">🏠 Dashboard</div>
+        <div class="nav-item nav-link" onclick="switchView('grades')">📊 Boletim Oficial</div>
+        <div class="nav-item nav-link" onclick="switchView('forum')">💬 Fórum da Turma</div>
+        <div class="nav-item nav-link" onclick="switchView('materials')">📁 Repositório</div>
+        
+        <div style="margin-top:auto">
+            <div class="nav-link" onclick="logout()" style="color:#ff4b4b">🚪 Finalizar Sessão</div>
+        </div>
     </nav>
 
     <main id="main-screen">
-        <input type="text" placeholder="Pesquisa Global..." oninput="search(this.value)" style="width:300px; border-radius:20px; padding:8px 15px; margin-bottom:30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+            <div>
+                <p id="date-now" style="color:var(--text-dim); font-size:0.9rem;"></p>
+                <h2 id="user-welcome" class="section-title">Bem-vindo</h2>
+            </div>
+            <input type="text" placeholder="🔍 Pesquisa rápida..." oninput="search(this.value)" style="width:250px; margin:0;">
+        </div>
 
         <section id="view-home" class="view active">
-            <div id="prof-task" class="card" style="display:none; border-color:#28a745">
-                <h3>Postar Atividade</h3>
-                <input type="text" id="t-mat" placeholder="Matéria">
-                <input type="text" id="t-tit" placeholder="Título">
-                <input type="date" id="t-date">
-                <button onclick="postTask()" style="background:#28a745">Publicar</button>
+            <div id="prof-panel" class="widget glass" style="display:none; border-color:#00ff7f">
+                <h3 style="margin-bottom:15px">📢 Nova Atividade</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <input type="text" id="t-mat" placeholder="Matéria">
+                    <input type="text" id="t-tit" placeholder="Título">
+                    <input type="date" id="t-date">
+                </div>
+                <button class="btn-prime" onclick="postTask()" style="background:#00ff7f">Publicar Agora</button>
             </div>
+            <h3 style="margin-bottom:20px;">📌 Mural de Avisos</h3>
             <div id="task-list"></div>
         </section>
 
         <section id="view-grades" class="view">
-            <div id="print-area">
-                <h2>Boletim Escolar Oficial</h2>
-                <p id="grade-info"></p>
-                <table>
-                    <thead><tr><th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th></tr></thead>
-                    <tbody id="grade-list"></tbody>
+            <div id="pdf-content" class="widget glass">
+                <h2 style="margin-bottom:20px;">Boletim Escolar Digital</h2>
+                <table class="grade-table">
+                    <thead><tr><th>Disciplina</th><th>AV1</th><th>AV2</th><th>Média Final</th><th>Status</th></tr></thead>
+                    <tbody id="grade-body"></tbody>
                 </table>
             </div>
-            <button onclick="downloadPDF()" style="background:#dc3545">Gerar PDF do Boletim</button>
-        </section>
-
-        <section id="view-materials" class="view">
-            <div id="prof-mat" class="card" style="display:none; border-color:gold">
-                <h3>Postar Material</h3>
-                <input type="text" id="m-tit" placeholder="Título">
-                <input type="text" id="m-url" placeholder="Link (Drive/GitHub)">
-                <button onclick="postMaterial()">Postar</button>
-            </div>
-            <div id="mat-list"></div>
+            <button class="btn-prime" onclick="exportPDF()" style="background:#dc3545; color:white;">💾 Exportar PDF Oficial</button>
         </section>
 
         <section id="view-forum" class="view">
-            <div class="card">
-                <h3>Novo Debate / Enquete</h3>
-                <input type="text" id="f-tit" placeholder="Título">
-                <textarea id="f-con" placeholder="Conteúdo..."></textarea>
-                <div id="poll-box">
-                    <p><input type="checkbox" id="is-poll"> Incluir Enquete?</p>
-                    <input type="text" id="p-que" placeholder="Pergunta">
-                    <input type="text" id="p-opt" placeholder="Opções (voto1, voto2)">
-                </div>
-                <button onclick="postThread()">Postar</button>
+            <div class="widget glass">
+                <h3>Novo Tópico</h3>
+                <input type="text" id="f-tit" placeholder="Assunto">
+                <textarea id="f-con" placeholder="Explique seu ponto..."></textarea>
+                <button class="btn-prime" onclick="postThread()">Criar Tópico</button>
             </div>
             <div id="forum-list"></div>
         </section>
     </main>
 
     <script>
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
         let isLogin = true;
         const token = () => localStorage.getItem('v-token');
 
         window.onload = () => {
             const user = localStorage.getItem('v-user');
             if(user) showDashboard(JSON.parse(user));
+            document.getElementById('date-now').innerText = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long'});
         };
 
         function toggleAuth() {
             isLogin = !isLogin;
-            document.getElementById('reg-extra').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-btn').innerText = isLogin ? 'Entrar' : 'Registrar';
+            document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('auth-btn').innerText = isLogin ? 'Acessar Sistema' : 'Criar Conta Vertex';
         }
 
         async function handleAuth() {
@@ -138,70 +198,75 @@
                     localStorage.setItem('v-user', JSON.stringify(data));
                     localStorage.setItem('v-token', data.token);
                     showDashboard(data);
-                } else { alert("Conta criada!"); toggleAuth(); }
-            } else { alert("Falha na autenticação."); }
+                } else { alert("Conta Vertex criada!"); toggleAuth(); }
+            } else { alert("Verifique suas credenciais."); }
         }
 
         function showDashboard(user) {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('sidebar').style.display = 'flex';
             document.getElementById('main-screen').style.display = 'block';
-            if(['professor', 'admin'].includes(user.role)) {
-                document.getElementById('prof-task').style.display = 'block';
-                document.getElementById('prof-mat').style.display = 'block';
-            }
+            document.getElementById('user-welcome').innerText = `Olá, ${user.nome.split(' ')[0]} 👋`;
+            if(['professor', 'admin'].includes(user.role)) document.getElementById('prof-panel').style.display = 'block';
             loadTasks();
         }
 
         function switchView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
             event.currentTarget.classList.add('active');
             if(id === 'grades') loadGrades();
-            if(id === 'materials') loadMaterials();
             if(id === 'forum') loadForum();
         }
 
         async function loadTasks() {
             const tasks = await (await fetch('/api/tasks')).json();
-            document.getElementById('task-list').innerHTML = tasks.map(t => `<div class="card"><b>${t.materia}</b>: ${t.titulo}<br><small>Entrega: ${t.dataEntrega}</small></div>`).join('');
+            document.getElementById('task-list').innerHTML = tasks.map(t => `
+                <div class="widget glass thread-card">
+                    <span class="status-pill" style="background:rgba(0, 210, 255, 0.1); color:var(--accent)">${t.materia}</span>
+                    <h4 style="margin-top:10px;">${t.titulo}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-dim); margin-top:5px;">📅 Entrega: ${new Date(t.dataEntrega).toLocaleDateString()}</p>
+                </div>
+            `).join('');
         }
 
         async function loadGrades() {
             const grades = await (await fetch('/api/my-grades', { headers: {'Authorization': token()} })).json();
-            document.getElementById('grade-list').innerHTML = grades.map(g => `<tr><td>${g.materia}</td><td>${g.av1}</td><td>${g.av2}</td><td>${((g.av1+g.av2)/2).toFixed(1)}</td></tr>`).join('');
+            document.getElementById('grade-body').innerHTML = grades.map(g => {
+                const media = (g.av1 + g.av2) / 2;
+                return `<tr>
+                    <td><b>${g.materia}</b></td>
+                    <td>${g.av1}</td>
+                    <td>${g.av2}</td>
+                    <td style="color:var(--accent)">${media.toFixed(1)}</td>
+                    <td><span class="status-pill" style="background:${media >= 6 ? 'rgba(0,255,127,0.1)' : 'rgba(255,75,75,0.1)'}; color:${media >= 6 ? '#00ff7f' : '#ff4b4b'}">
+                        ${media >= 6 ? 'Aprovado' : 'Recuperação'}
+                    </span></td>
+                </tr>`;
+            }).join('');
         }
 
-        function downloadPDF() {
-            html2pdf().from(document.getElementById('print-area')).save('Boletim_Vertex.pdf');
-        }
-
-        async function postThread() {
-            const pollData = document.getElementById('is-poll').checked ? { active: true, question: document.getElementById('p-que').value, options: document.getElementById('p-opt').value.split(',').map(o => ({text: o.trim()})) } : null;
-            await fetch('/api/forum', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value, pollData, token: token() }) });
-            loadForum();
+        function exportPDF() {
+            html2pdf().set({ margin: 1, filename: 'Boletim_Vertex_Pro.pdf' }).from(document.getElementById('pdf-content')).save();
         }
 
         async function loadForum() {
             const threads = await (await fetch('/api/forum')).json();
             document.getElementById('forum-list').innerHTML = threads.map(t => `
-                <div class="card">
-                    <h4>${t.titulo}</h4><p>${t.conteudo}</p>
-                    ${t.poll?.active ? `<div style="padding:10px; background:#000; border-radius:8px">${t.poll.options.map(o => `<div class="poll-opt">${o.text} (${o.votes} votos)</div>`).join('')}</div>` : ''}
-                    <button onclick="vote('${t._id}')" style="width:auto; margin-top:10px;">🔼 ${t.upvotes.length}</button>
-                    <div class="replies">${t.replies.map(r => `<div class="reply-box"><b>${r.autor}:</b> ${r.texto}</div>`).join('')}</div>
+                <div class="widget glass">
+                    <h4>${t.titulo}</h4>
+                    <p style="color:var(--text-dim); margin:10px 0;">${t.conteudo}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <small style="color:var(--accent)">@${t.autor}</small>
+                        <button style="width:auto; padding:5px 15px; border-radius:30px; background:#111; color:white; border:1px solid #333;">🔼 ${t.upvotes.length}</button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        async function vote(id) {
-            await fetch('/api/forum/vote', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({threadId: id, token: token()}) });
-            loadForum();
-        }
-
         function search(q) {
-            document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none');
+            document.querySelectorAll('.widget').forEach(w => w.style.display = w.innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none');
         }
 
         function logout() { localStorage.clear(); location.reload(); }
