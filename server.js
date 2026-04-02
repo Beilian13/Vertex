@@ -42,8 +42,8 @@ app.post('/api/auth/register', async (req, res) => {
     try {
         const hashed = await bcrypt.hash(senha, 10);
         await User.create({ nome, email, senha: hashed, turma });
-        res.status(201).send("Registered successfully!");
-    } catch(e) { res.status(400).send("Error: Email already exists."); }
+        res.status(201).send("Registrado com sucesso!");
+    } catch(e) { res.status(400).send("Erro: Email já cadastrado."); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -53,7 +53,7 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome }, process.env.JWT_SECRET);
         res.json({ token, role: user.role, nome: user.nome, turma: user.turma });
     } else {
-        res.status(401).send("Invalid credentials.");
+        res.status(401).send("Credenciais inválidas.");
     }
 });
 
@@ -69,11 +69,11 @@ app.post('/api/tasks', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         if (['admin', 'direcao', 'professor'].includes(decoded.role)) {
             await Task.create({ titulo, materia, dataEntrega, autor: decoded.nome });
-            res.status(201).send("Activity published!");
+            res.status(201).send("Atividade publicada!");
         } else {
-            res.status(403).send("Permission denied.");
+            res.status(403).send("Acesso negado.");
         }
-    } catch(e) { res.status(401).send("Invalid session."); }
+    } catch(e) { res.status(401).send("Sessão inválida."); }
 });
 
 // --- ADMIN ROUTES ---
@@ -81,10 +81,10 @@ app.put('/api/admin/update-role', async (req, res) => {
     const { targetEmail, newRole, token } = req.body;
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'admin' && decoded.role !== 'direcao') return res.status(403).send("Access Denied.");
+        if (decoded.role !== 'admin' && decoded.role !== 'direcao') return res.status(403).send("Acesso Negado.");
         await User.findOneAndUpdate({ email: targetEmail }, { role: newRole });
-        res.send(`Role of ${targetEmail} changed to ${newRole}`);
-    } catch(e) { res.status(401).send("Invalid token."); }
+        res.send(`Cargo de ${targetEmail} alterado para ${newRole}`);
+    } catch(e) { res.status(401).send("Token inválido."); }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
