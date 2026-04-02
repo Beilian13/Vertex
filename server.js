@@ -11,11 +11,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
-// Conexão com MongoDB
+// MongoDB Connection
 const mongoURI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ Vertex: Banco de Dados Conectado"))
-    .catch(err => console.error("❌ Vertex: Erro de Conexão:", err));
+    .then(() => console.log("✅ Vertex: Database Connected"))
+    .catch(err => console.error("❌ Vertex: Connection Error:", err));
 
 // --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
@@ -36,15 +36,14 @@ const TaskSchema = new mongoose.Schema({
 });
 const Task = mongoose.model('Task', TaskSchema);
 
-// --- ROTAS DE AUTENTICAÇÃO ---
-
+// --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     const { nome, email, senha, turma } = req.body;
     try {
         const hashed = await bcrypt.hash(senha, 10);
         await User.create({ nome, email, senha: hashed, turma });
-        res.status(201).send("Registrado com sucesso!");
-    } catch(e) { res.status(400).send("Erro: Email já cadastrado."); }
+        res.status(201).send("Registered successfully!");
+    } catch(e) { res.status(400).send("Error: Email already exists."); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -54,12 +53,11 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome }, process.env.JWT_SECRET);
         res.json({ token, role: user.role, nome: user.nome, turma: user.turma });
     } else {
-        res.status(401).send("E-mail ou senha incorretos.");
+        res.status(401).send("Invalid credentials.");
     }
 });
 
-// --- ROTAS DE TAREFAS ---
-
+// --- TASK ROUTES ---
 app.get('/api/tasks', async (req, res) => {
     const tasks = await Task.find().sort({ createdAt: -1 });
     res.json(tasks);
@@ -71,27 +69,25 @@ app.post('/api/tasks', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         if (['admin', 'direcao', 'professor'].includes(decoded.role)) {
             await Task.create({ titulo, materia, dataEntrega, autor: decoded.nome });
-            res.status(201).send("Atividade publicada!");
+            res.status(201).send("Activity published!");
         } else {
-            res.status(403).send("Apenas professores podem postar.");
+            res.status(403).send("Permission denied.");
         }
-    } catch(e) { res.status(401).send("Sessão inválida."); }
+    } catch(e) { res.status(401).send("Invalid session."); }
 });
 
-// --- ROTA DE ADMIN ---
-
+// --- ADMIN ROUTES ---
 app.put('/api/admin/update-role', async (req, res) => {
     const { targetEmail, newRole, token } = req.body;
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'admin' && decoded.role !== 'direcao') return res.status(403).send("Acesso Negado.");
-        
+        if (decoded.role !== 'admin' && decoded.role !== 'direcao') return res.status(403).send("Access Denied.");
         await User.findOneAndUpdate({ email: targetEmail }, { role: newRole });
-        res.send(`Cargo de ${targetEmail} alterado para ${newRole}`);
-    } catch(e) { res.status(401).send("Token inválido."); }
+        res.send(`Role of ${targetEmail} changed to ${newRole}`);
+    } catch(e) { res.status(401).send("Invalid token."); }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Vertex rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Vertex engine running on port ${PORT}`));
