@@ -2,163 +2,208 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Vertex | Social & Academic</title>
+    <title>Vertex | Gestão Escolar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; }
-        
-        #sidebar { width: 260px; height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; }
-        .nav-item { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; color: #888; }
-        .nav-item.active { background: #151515; color: var(--primary); }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-        main { margin-left: 260px; padding: 40px; width: 100%; }
+        /* --- AUTH --- */
+        #auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .auth-box { background: var(--card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 380px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; color: #fff; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+
+        /* --- LAYOUT --- */
+        #sidebar { width: 260px; height: 100vh; background: #080808; border-right: 1px solid var(--border); position: fixed; padding: 20px; display: none; flex-direction: column; }
+        .nav-item { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; color: #888; transition: 0.2s; }
+        .nav-item.active { background: #151515; color: var(--primary); font-weight: bold; }
+        main { margin-left: 260px; padding: 40px; display: none; }
         .view { display: none; }
         .view.active { display: block; }
 
+        /* --- UI COMPONENTS --- */
         .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        
-        /* FORUM STYLES */
-        .vote-btn { background: #222; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .reply-box { margin-top: 15px; border-left: 2px solid var(--primary); padding-left: 15px; }
-        .reply-input { background: #1a1a1a; border: 1px solid #333; color: #fff; width: 80%; padding: 5px; border-radius: 4px; }
-
-        /* GRADE TABLE */
+        .badge { background: rgba(0,123,255,0.1); color: var(--primary); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { border: 1px solid var(--border); padding: 12px; text-align: center; }
-        th { background: #1a1a1a; }
-        .pdf-btn { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        .poll-opt { background: #1a1a1a; padding: 10px; margin: 5px 0; border-radius: 8px; cursor: pointer; border: 1px solid #333; }
+        .reply-box { border-left: 2px solid var(--primary); padding-left: 15px; margin-top: 10px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
+    <div id="auth-container">
+        <div class="auth-box">
+            <h2 id="auth-title" style="color:var(--primary); margin-bottom:20px;">Vertex Login</h2>
+            <div id="reg-extra" style="display:none">
+                <input type="text" id="reg-nome" placeholder="Nome Completo">
+                <input type="text" id="reg-turma" placeholder="Turma (ex: 8º C)">
+            </div>
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="handleAuth()" id="auth-btn">Entrar</button>
+            <p onclick="toggleAuth()" style="text-align:center; font-size:0.8rem; margin-top:15px; cursor:pointer; color:#666">Trocar Login/Registro</p>
+        </div>
+    </div>
+
     <nav id="sidebar">
-        <h2 style="color:var(--primary); margin-bottom:30px;">VERTEX</h2>
+        <h2 style="color:var(--primary); margin-bottom:40px;">VERTEX</h2>
         <div class="nav-item active" onclick="switchView('home')">🏠 Mural</div>
-        <div class="nav-item" onclick="switchView('grades')">📊 Minhas Notas</div>
-        <div class="nav-item" onclick="switchView('forum')">💬 Fórum</div>
-        <div class="nav-item" style="margin-top:auto; color:#ff4444" onclick="logout()">Logout</div>
+        <div class="nav-item" onclick="switchView('grades')">📊 Boletim PDF</div>
+        <div class="nav-item" onclick="switchView('materials')">📁 Materiais</div>
+        <div class="nav-item" onclick="switchView('forum')">💬 Fórum & Enquetes</div>
+        <div class="nav-item" style="margin-top:auto; color:#ff4444" onclick="logout()">🚪 Sair</div>
     </nav>
 
     <main id="main-screen">
+        <input type="text" placeholder="Pesquisa Global..." oninput="search(this.value)" style="width:300px; border-radius:20px; padding:8px 15px; margin-bottom:30px;">
+
+        <section id="view-home" class="view active">
+            <div id="prof-task" class="card" style="display:none; border-color:#28a745">
+                <h3>Postar Atividade</h3>
+                <input type="text" id="t-mat" placeholder="Matéria">
+                <input type="text" id="t-tit" placeholder="Título">
+                <input type="date" id="t-date">
+                <button onclick="postTask()" style="background:#28a745">Publicar</button>
+            </div>
+            <div id="task-list"></div>
+        </section>
+
         <section id="view-grades" class="view">
-            <div id="grade-report">
-                <h2 style="margin-bottom:10px;">Boletim Oficial</h2>
-                <p id="student-info" style="color:#888; margin-bottom:20px;"></p>
+            <div id="print-area">
+                <h2>Boletim Escolar Oficial</h2>
+                <p id="grade-info"></p>
                 <table>
                     <thead><tr><th>Matéria</th><th>AV1</th><th>AV2</th><th>Média</th></tr></thead>
-                    <tbody id="official-grades"></tbody>
+                    <tbody id="grade-list"></tbody>
                 </table>
             </div>
-            <button class="pdf-btn" onclick="downloadPDF()">⬇️ Baixar PDF do Boletim</button>
+            <button onclick="downloadPDF()" style="background:#dc3545">Gerar PDF do Boletim</button>
+        </section>
+
+        <section id="view-materials" class="view">
+            <div id="prof-mat" class="card" style="display:none; border-color:gold">
+                <h3>Postar Material</h3>
+                <input type="text" id="m-tit" placeholder="Título">
+                <input type="text" id="m-url" placeholder="Link (Drive/GitHub)">
+                <button onclick="postMaterial()">Postar</button>
+            </div>
+            <div id="mat-list"></div>
         </section>
 
         <section id="view-forum" class="view">
             <div class="card">
-                <h3>Criar Novo Tópico</h3>
-                <input type="text" id="f-title" placeholder="Título do debate">
-                <textarea id="f-content" style="width:100%; height:60px; background:#1a1a1a; color:#fff; border:1px solid #333; margin:10px 0; padding:10px; border-radius:8px;"></textarea>
-                <button onclick="postThread()">Publicar</button>
+                <h3>Novo Debate / Enquete</h3>
+                <input type="text" id="f-tit" placeholder="Título">
+                <textarea id="f-con" placeholder="Conteúdo..."></textarea>
+                <div id="poll-box">
+                    <p><input type="checkbox" id="is-poll"> Incluir Enquete?</p>
+                    <input type="text" id="p-que" placeholder="Pergunta">
+                    <input type="text" id="p-opt" placeholder="Opções (voto1, voto2)">
+                </div>
+                <button onclick="postThread()">Postar</button>
             </div>
-            <div id="forum-container"></div>
-        </section>
-
-        <section id="view-home" class="view active">
-            <h1>Mural da Turma</h1>
-            <div id="task-list"></div>
+            <div id="forum-list"></div>
         </section>
     </main>
 
     <script>
-        const token = localStorage.getItem('v-token');
+        let isLogin = true;
+        const token = () => localStorage.getItem('v-token');
+
+        window.onload = () => {
+            const user = localStorage.getItem('v-user');
+            if(user) showDashboard(JSON.parse(user));
+        };
+
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('reg-extra').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('auth-btn').innerText = isLogin ? 'Entrar' : 'Registrar';
+        }
+
+        async function handleAuth() {
+            const body = isLogin ? { email: email.value, senha: pass.value } : 
+                         { nome: document.getElementById('reg-nome').value, email: email.value, senha: pass.value, turma: document.getElementById('reg-turma').value };
+            
+            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', {
+                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+            });
+
+            if(res.ok) {
+                if(isLogin) {
+                    const data = await res.json();
+                    localStorage.setItem('v-user', JSON.stringify(data));
+                    localStorage.setItem('v-token', data.token);
+                    showDashboard(data);
+                } else { alert("Conta criada!"); toggleAuth(); }
+            } else { alert("Falha na autenticação."); }
+        }
+
+        function showDashboard(user) {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'flex';
+            document.getElementById('main-screen').style.display = 'block';
+            if(['professor', 'admin'].includes(user.role)) {
+                document.getElementById('prof-task').style.display = 'block';
+                document.getElementById('prof-mat').style.display = 'block';
+            }
+            loadTasks();
+        }
 
         function switchView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
-            if(id === 'grades') loadOfficialGrades();
+            event.currentTarget.classList.add('active');
+            if(id === 'grades') loadGrades();
+            if(id === 'materials') loadMaterials();
             if(id === 'forum') loadForum();
         }
 
-        // --- GRADES & PDF ---
-        async function loadOfficialGrades() {
-            const res = await fetch('/api/my-grades', { headers: {'Authorization': token} });
-            const grades = await res.json();
-            const user = JSON.parse(localStorage.getItem('v-user'));
-            document.getElementById('student-info').innerText = `${user.nome} | Turma: ${user.turma}`;
-            
-            const body = document.getElementById('official-grades');
-            body.innerHTML = grades.map(g => `
-                <tr>
-                    <td>${g.materia}</td>
-                    <td>${g.av1}</td>
-                    <td>${g.av2}</td>
-                    <td style="color:gold; font-weight:bold">${((g.av1 + g.av2)/2).toFixed(1)}</td>
-                </tr>
-            `).join('');
+        async function loadTasks() {
+            const tasks = await (await fetch('/api/tasks')).json();
+            document.getElementById('task-list').innerHTML = tasks.map(t => `<div class="card"><b>${t.materia}</b>: ${t.titulo}<br><small>Entrega: ${t.dataEntrega}</small></div>`).join('');
+        }
+
+        async function loadGrades() {
+            const grades = await (await fetch('/api/my-grades', { headers: {'Authorization': token()} })).json();
+            document.getElementById('grade-list').innerHTML = grades.map(g => `<tr><td>${g.materia}</td><td>${g.av1}</td><td>${g.av2}</td><td>${((g.av1+g.av2)/2).toFixed(1)}</td></tr>`).join('');
         }
 
         function downloadPDF() {
-            const element = document.getElementById('grade-report');
-            const opt = { margin: 1, filename: 'Boletim_Vertex.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
-            html2pdf().set(opt).from(element).save();
+            html2pdf().from(document.getElementById('print-area')).save('Boletim_Vertex.pdf');
         }
 
-        // --- FORUM & SOCIAL ---
+        async function postThread() {
+            const pollData = document.getElementById('is-poll').checked ? { active: true, question: document.getElementById('p-que').value, options: document.getElementById('p-opt').value.split(',').map(o => ({text: o.trim()})) } : null;
+            await fetch('/api/forum', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value, pollData, token: token() }) });
+            loadForum();
+        }
+
         async function loadForum() {
-            const res = await fetch('/api/forum');
-            const threads = await res.json();
-            const container = document.getElementById('forum-container');
-            container.innerHTML = threads.map(t => `
+            const threads = await (await fetch('/api/forum')).json();
+            document.getElementById('forum-list').innerHTML = threads.map(t => `
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between">
-                        <h4>${t.titulo}</h4>
-                        <button class="vote-btn" onclick="vote('${t._id}')">🔼 ${t.upvotes.length}</button>
-                    </div>
-                    <p style="margin:10px 0; color:#ccc">${t.conteudo}</p>
-                    <small style="color:var(--primary)">Postado por: ${t.autor}</small>
-                    
-                    <div class="replies" id="replies-${t._id}">
-                        ${t.replies.map(r => `<div class="reply-box"><small><b>${r.autor}:</b> ${r.texto}</small></div>`).join('')}
-                    </div>
-                    
-                    <div style="margin-top:10px;">
-                        <input type="text" id="input-${t._id}" class="reply-input" placeholder="Escreva um comentário...">
-                        <button onclick="reply('${t._id}')">Enviar</button>
-                    </div>
+                    <h4>${t.titulo}</h4><p>${t.conteudo}</p>
+                    ${t.poll?.active ? `<div style="padding:10px; background:#000; border-radius:8px">${t.poll.options.map(o => `<div class="poll-opt">${o.text} (${o.votes} votos)</div>`).join('')}</div>` : ''}
+                    <button onclick="vote('${t._id}')" style="width:auto; margin-top:10px;">🔼 ${t.upvotes.length}</button>
+                    <div class="replies">${t.replies.map(r => `<div class="reply-box"><b>${r.autor}:</b> ${r.texto}</div>`).join('')}</div>
                 </div>
             `).join('');
         }
 
-        async function vote(threadId) {
-            await fetch('/api/forum/vote', { 
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ threadId, token }) 
-            });
+        async function vote(id) {
+            await fetch('/api/forum/vote', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({threadId: id, token: token()}) });
             loadForum();
         }
 
-        async function reply(threadId) {
-            const texto = document.getElementById(`input-${threadId}`).value;
-            await fetch('/api/forum/reply', { 
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ threadId, texto, token }) 
-            });
-            loadForum();
+        function search(q) {
+            document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none');
         }
 
-        async function postThread() {
-            const titulo = document.getElementById('f-title').value;
-            const conteudo = document.getElementById('f-content').value;
-            await fetch('/api/forum', { 
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ titulo, conteudo, token }) 
-            });
-            loadForum();
-        }
-
-        // --- AUTH & OTHER LOGIC ---
-        // [Add your login/showDashboard logic here]
         function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
