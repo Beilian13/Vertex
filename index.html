@@ -2,105 +2,206 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Vertex | Gestão Total</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertex | Gestão Acadêmica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --accent: #00d2ff; --bg: #030303; --card: rgba(25, 25, 25, 0.8); --border: rgba(255, 255, 255, 0.1); --text: #eee; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --accent: #00d2ff; --bg: #050505; --card: rgba(25, 25, 25, 0.7); --border: rgba(255, 255, 255, 0.08); --text: #f0f0f0; --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); }
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.2s ease-in-out; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
         
-        /* AUTH PAGE - VISIBLE BY DEFAULT */
-        #auth-page { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #112244 0%, #030303 100%); }
-        .glass-card { background: var(--card); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 20px; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        /* AUTH SCREEN */
+        #auth-page { height: 100vh; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(circle at 20% 30%, #112244 0%, transparent 40%); }
+        .glass { background: var(--card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow); }
         
-        /* DASHBOARD - HIDDEN BY DEFAULT */
+        .auth-container { width: 420px; padding: 45px; text-align: center; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { font-size: 0.8rem; color: #888; margin-left: 5px; }
+        input, textarea, select { width: 100%; padding: 14px; margin-top: 5px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-size: 0.95rem; }
+        input:focus { border-color: var(--accent); outline: none; background: rgba(0,210,255,0.05); }
+
+        .btn-main { width: 100%; padding: 16px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3); }
+
+        /* DASHBOARD LAYOUT */
         #app-shell { display: none; }
-        #sidebar { width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: flex; flex-direction: column; padding: 30px; z-index: 100; }
-        main { margin-left: 320px; padding: 40px; width: calc(100% - 320px); }
+        #sidebar { width: 280px; height: 95vh; margin: 2.5vh; position: fixed; display: flex; flex-direction: column; padding: 30px; }
+        .sidebar-brand { font-family: 'Poppins'; font-size: 1.8rem; color: var(--accent); margin-bottom: 50px; display: flex; align-items: center; gap: 10px; }
+        
+        .nav-item { padding: 16px; margin: 8px 0; border-radius: 14px; cursor: pointer; color: #999; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .nav-item.active { background: linear-gradient(90deg, rgba(0,210,255,0.15) 0%, transparent 100%); color: var(--accent); border-left: 3px solid var(--accent); }
 
-        .nav-link { padding: 15px; margin: 5px 0; border-radius: 12px; cursor: pointer; color: #888; transition: 0.3s; }
-        .nav-link.active { background: rgba(0, 210, 255, 0.1); color: var(--accent); font-weight: bold; }
-
-        .view { display: none; animation: fadeIn 0.4s ease; }
+        main { margin-left: 320px; padding: 40px; }
+        .view { display: none; animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        input, textarea { width: 100%; padding: 15px; margin: 10px 0; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: #fff; outline: none; }
-        .btn-prime { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-prime:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        /* COMPONENTS */
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        
+        .hw-card { border-left: 5px solid #ffcc00; padding: 25px; }
+        .hw-card h4 { font-size: 1.2rem; margin-bottom: 10px; }
+        .hw-card .meta { font-size: 0.8rem; color: #777; margin-top: 15px; border-top: 1px solid var(--border); pt: 10px; }
 
-        .branch { border-left: 2px solid var(--accent); margin-left: 20px; padding-left: 15px; margin-top: 10px; }
-        .hw-card { border-left: 4px solid #ffcc00; }
+        .branch { border-left: 2px solid #333; margin-left: 30px; padding-left: 20px; margin-top: 15px; }
+        .reply-box { font-size: 0.9rem; padding: 15px; background: rgba(255,255,255,0.02); margin-top: 10px; border-radius: 10px; }
+
+        #notification { position: fixed; bottom: 30px; right: 30px; padding: 15px 30px; border-radius: 12px; background: var(--accent); color: #000; font-weight: bold; transform: translateX(200%); z-index: 1000; }
+        #notification.show { transform: translateX(0); }
+
+        .direcao-pill { background: #ff4b4b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
     </style>
 </head>
 <body>
 
-    <div id="auth-page">
-        <div class="glass-card" style="width: 400px; text-align: center;">
-            <h1 style="font-family:'Poppins'; color:var(--accent); font-size:2.5rem; margin-bottom:10px;">VERTEX</h1>
-            <p style="color:#666; margin-bottom:30px;">Sistema de Gestão Escolar</p>
+    <div id="notification">Ação concluída!</div>
+
+    <section id="auth-page">
+        <div class="auth-container glass">
+            <h1 class="sidebar-brand">VERTEX</h1>
+            <p style="color:#666; margin-bottom:30px;">Login para Acesso Acadêmico</p>
+            
             <div id="reg-fields" style="display:none">
-                <input type="text" id="reg-nome" placeholder="Nome Completo">
-                <input type="text" id="reg-turma" placeholder="Sua Turma">
+                <div class="input-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="reg-nome">
+                </div>
+                <div class="input-group">
+                    <label>Sua Turma (ex: 8A)</label>
+                    <input type="text" id="reg-turma">
+                </div>
             </div>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="senha" placeholder="Senha">
-            <button class="btn-prime" onclick="handleAuth()" id="auth-btn">Entrar no Sistema</button>
+
+            <div class="input-group">
+                <label>E-mail Institucional</label>
+                <input type="email" id="email">
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" id="senha">
+            </div>
+
+            <button class="btn-main" id="auth-btn" onclick="handleAuth()">Autenticar</button>
             <p onclick="toggleAuth()" style="margin-top:20px; font-size:0.8rem; cursor:pointer; color:var(--accent)">Trocar para Registro</p>
         </div>
-    </div>
+    </section>
 
     <div id="app-shell">
-        <nav id="sidebar" class="glass-card">
-            <h2 style="font-family:'Poppins'; color:var(--accent); margin-bottom:40px;">VERTEX</h2>
-            <div class="nav-link active" onclick="switchView('home')">🏠 Mural</div>
-            <div class="nav-link" onclick="switchView('homeworks')">📚 Lição de Casa</div>
-            <div class="nav-link" onclick="switchView('grades')">📊 Boletim PDF</div>
-            <div class="nav-link" onclick="switchView('forum')">💬 Fórum</div>
-            <div id="btn-direcao" class="nav-link" style="display:none; color:#ff4b4b" onclick="switchView('direcao')">🛡️ Direção</div>
-            <div class="nav-link" onclick="logout()" style="margin-top:auto; color:#ff4b4b">🚪 Sair</div>
+        <nav id="sidebar" class="glass">
+            <div class="sidebar-brand">VERTEX</div>
+            
+            <div class="nav-item active" onclick="switchView('home')">Mural</div>
+            <div class="nav-item" onclick="switchView('homeworks')">Lições de Casa</div>
+            <div class="nav-item" onclick="switchView('grades')">Boletim Virtual</div>
+            <div class="nav-item" onclick="switchView('forum')">Fórum & Debates</div>
+            <div id="nav-direcao" class="nav-item" style="display:none; color:#ff4b4b" onclick="switchView('direcao')">🛡️ Direção</div>
+            
+            <div style="margin-top:auto; display:flex; align-items:center; gap:10px; padding:10px;">
+                <img id="user-avatar" src="" style="width:40px; border-radius:50%;">
+                <div style="font-size:0.8rem">
+                    <b id="user-name-label"></b><br>
+                    <span id="user-role-label" style="color:#666"></span>
+                </div>
+            </div>
+            <div class="nav-item" onclick="logout()" style="color:#ff4b4b; margin-top:10px;">Desconectar</div>
         </nav>
 
         <main>
-            <h2 id="welcome-header" style="margin-bottom:30px; font-family:'Poppins';">Bem-vindo</h2>
-
             <section id="view-home" class="view active">
-                <div id="prof-mural" class="glass-card" style="display:none">
-                    <h3>Novo Comunicado</h3>
-                    <input type="text" id="m-tit" placeholder="Assunto">
-                    <button class="btn-prime" onclick="postMural()">Enviar ao Mural</button>
+                <div class="card-header">
+                    <h2>Mural da Turma</h2>
+                    <input type="text" placeholder="Filtrar avisos..." oninput="search(this.value, 'mural-list')" style="width:250px;">
                 </div>
-                <div id="mural-list"></div>
+                <div id="prof-post-area" class="glass" style="display:none; padding:30px; margin-bottom:30px;">
+                    <h3>Novo Aviso no Mural</h3>
+                    <input type="text" id="m-tit" placeholder="Título do Comunicado">
+                    <button class="btn-main" onclick="postToMural()" style="width:auto; margin-top:15px; padding:10px 30px;">Postar</button>
+                </div>
+                <div id="mural-list" class="grid"></div>
             </section>
 
             <section id="view-homeworks" class="view">
-                <div id="prof-hw" class="glass-card" style="display:none; border-color:#ffcc00">
-                    <h3>Nova Lição</h3>
-                    <input type="text" id="h-tit" placeholder="Título da Tarefa">
-                    <input type="text" id="h-mat" placeholder="Matéria">
-                    <textarea id="h-desc" placeholder="Instruções..."></textarea>
-                    <input type="date" id="h-date">
-                    <button class="btn-prime" style="background:#ffcc00" onclick="postHW()">Publicar</button>
+                <div class="card-header">
+                    <h2>Trabalhos e Lições</h2>
+                    <button id="btn-new-hw" class="btn-main" style="width:auto; padding:10px 20px;" onclick="toggleHwForm()">+ Nova Lição</button>
                 </div>
-                <div id="hw-list"></div>
+                <div id="hw-form" class="glass" style="display:none; padding:30px; margin-bottom:30px;">
+                    <input type="text" id="h-tit" placeholder="Título da Lição">
+                    <input type="text" id="h-mat" placeholder="Matéria">
+                    <textarea id="h-desc" placeholder="Instruções completas..."></textarea>
+                    <input type="date" id="h-date">
+                    <button class="btn-main" onclick="postHomework()">Lançar para a Turma</button>
+                </div>
+                <div id="hw-list" class="grid"></div>
             </section>
 
-            <section id="view-direcao" class="view">
-                <div class="glass-card">
-                    <h3>Administração da Escola</h3>
-                    <div id="user-list"></div>
+            <section id="view-grades" class="view">
+                <div class="card-header">
+                    <h2>Meu Desempenho</h2>
+                    <button class="btn-main" style="width:auto; background:#dc3545; color:white;" onclick="generatePDF()">Gerar PDF</button>
+                </div>
+                <div id="pdf-content" class="glass" style="padding:40px;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--accent); color: var(--accent);">
+                                <th style="padding:15px; text-align:left;">Disciplina</th>
+                                <th style="padding:15px;">AV1</th>
+                                <th style="padding:15px;">AV2</th>
+                                <th style="padding:15px;">Média Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-table-body"></tbody>
+                    </table>
                 </div>
             </section>
 
             <section id="view-forum" class="view">
                 <div id="forum-list-view">
-                    <div class="glass-card">
+                    <div class="card-header">
+                        <h2>Fórum de Discussão</h2>
+                        <button class="btn-main" style="width:auto;" onclick="document.getElementById('forum-composer').style.display='block'">Criar Tópico</button>
+                    </div>
+                    <div id="forum-composer" class="glass" style="display:none; padding:30px; margin-bottom:30px;">
                         <input type="text" id="f-tit" placeholder="Título do Debate">
-                        <textarea id="f-con" placeholder="Mensagem..."></textarea>
-                        <button class="btn-prime" onclick="postThread()">Abrir Tópico</button>
+                        <textarea id="f-con" placeholder="Contexto ou pergunta inicial..."></textarea>
+                        <button class="btn-main" onclick="postThread()">Abrir Discussão</button>
                     </div>
                     <div id="forum-container"></div>
+                </div>
+                <div id="thread-view" style="display:none">
+                    <button onclick="closeThread()" style="background:none; border:none; color:var(--accent); cursor:pointer; margin-bottom:20px;">← Voltar ao Fórum</button>
+                    <div id="thread-content" class="glass" style="padding:30px; margin-bottom:20px;"></div>
+                    <h3>Comentários</h3>
+                    <div id="comment-tree"></div>
+                    <div class="glass" style="padding:20px; margin-top:20px;">
+                        <textarea id="main-reply" placeholder="Escreva um comentário..."></textarea>
+                        <button class="btn-main" onclick="postReply(null)" style="width:auto; padding:10px 30px; margin-top:10px;">Postar</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-direcao" class="view">
+                <div class="card-header">
+                    <h2>Administração de Sistema</h2>
+                </div>
+                <div class="glass" style="padding:30px;">
+                    <table style="width:100%;">
+                        <thead>
+                            <tr style="color:#666; font-size:0.8rem;">
+                                <th style="text-align:left;">Usuário</th>
+                                <th>Cargo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-admin-body"></tbody>
+                    </table>
                 </div>
             </section>
         </main>
@@ -108,73 +209,186 @@
 
     <script>
         let isLogin = true;
-        const token = () => localStorage.getItem('v-token');
+        let currentThread = null;
+        const api = async (url, method='GET', body=null) => {
+            const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('v-token') } };
+            if(body) opts.body = JSON.stringify(body);
+            return await (await fetch(url, opts)).json();
+        };
+
+        function notify(text) {
+            const n = document.getElementById('notification');
+            n.innerText = text; n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 3000);
+        }
 
         function toggleAuth() {
             isLogin = !isLogin;
             document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-btn').innerText = isLogin ? 'Entrar no Sistema' : 'Criar Conta';
+            document.getElementById('auth-btn').innerText = isLogin ? 'Autenticar' : 'Finalizar Registro';
         }
 
         async function handleAuth() {
-            const body = isLogin ? { email:email.value, senha:senha.value } : 
-                         { nome:reg-nome.value, email:email.value, senha:senha.value, turma:reg-turma.value };
-            
-            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', {
-                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-            });
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            if(!email || !senha) return alert("Preencha tudo");
 
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const body = isLogin ? { email, senha } : { email, senha, nome: document.getElementById('reg-nome').value, turma: document.getElementById('reg-turma').value };
+            
+            const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
             if(res.ok) {
                 if(isLogin) {
                     const data = await res.json();
                     localStorage.setItem('v-token', data.token);
                     localStorage.setItem('v-user', JSON.stringify(data));
                     initApp(data);
-                } else { alert("Registrado!"); toggleAuth(); }
+                } else { notify("Conta Criada!"); toggleAuth(); }
             } else { alert("Falha na autenticação"); }
         }
 
         function initApp(user) {
             document.getElementById('auth-page').style.display = 'none';
             document.getElementById('app-shell').style.display = 'block';
-            document.getElementById('welcome-header').innerText = `Olá, ${user.nome}`;
+            document.getElementById('user-avatar').src = user.avatar;
+            document.getElementById('user-name-label').innerText = user.nome;
+            document.getElementById('user-role-label').innerText = user.role.toUpperCase();
 
-            if(['professor', 'direcao'].includes(user.role)) {
-                document.getElementById('prof-mural').style.display = 'block';
-                document.getElementById('prof-hw').style.display = 'block';
+            if(user.role !== 'aluno') {
+                document.getElementById('prof-post-area').style.display = 'block';
+                document.getElementById('btn-new-hw').style.display = 'block';
+            } else {
+                document.getElementById('btn-new-hw').style.display = 'none';
             }
-            if(user.role === 'direcao') document.getElementById('btn-direcao').style.display = 'block';
+
+            if(user.role === 'direcao') document.getElementById('nav-direcao').style.display = 'flex';
             
             switchView('home');
+            notify(`Bem-vindo, ${user.nome.split(' ')[0]}!`);
         }
 
         function switchView(id) {
+            const target = document.getElementById('view-' + id);
+            if(!target) return;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            target.classList.add('active');
+            
+            // Add active class to nav
+            const navs = document.querySelectorAll('.nav-item');
+            navs.forEach(n => { if(n.innerText.toLowerCase().includes(id.substring(0,3))) n.classList.add('active'); });
+
             if(id === 'homeworks') loadHWs();
             if(id === 'forum') loadForum();
+            if(id === 'grades') loadGrades();
+            if(id === 'direcao') loadDirecao();
         }
 
         async function loadHWs() {
-            const data = await (await fetch('/api/homeworks')).json();
-            document.getElementById('hw-list').innerHTML = data.map(h => `
-                <div class="glass-card hw-card">
-                    <small style="color:#ffcc00">${h.materia}</small>
+            const hws = await api('/api/homeworks');
+            document.getElementById('hw-list').innerHTML = hws.map(h => `
+                <div class="glass hw-card">
+                    <span style="color:#ffcc00; font-size:0.7rem; font-weight:800;">${h.materia.toUpperCase()}</span>
                     <h4>${h.titulo}</h4>
-                    <p style="color:#888; margin:10px 0;">${h.descricao}</p>
-                    <small>Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</small>
+                    <p style="font-size:0.9rem; color:#aaa;">${h.descricao}</p>
+                    <div class="meta">Entrega: ${new Date(h.dataEntrega).toLocaleDateString()} | Por: ${h.autor}</div>
                 </div>
             `).join('');
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        async function postHomework() {
+            const body = {
+                titulo: document.getElementById('h-tit').value,
+                materia: document.getElementById('h-mat').value,
+                descricao: document.getElementById('h-desc').value,
+                dataEntrega: document.getElementById('h-date').value
+            };
+            await api('/api/homeworks', 'POST', body);
+            notify("Lição publicada!");
+            document.getElementById('hw-form').style.display = 'none';
+            loadHWs();
+        }
 
-        // Persistent Session Check
-        window.onload = () => {
-            const saved = localStorage.getItem('v-user');
-            if(saved) initApp(JSON.parse(saved));
-        };
+        async function loadGrades() {
+            const grades = await api('/api/me/grades');
+            document.getElementById('grades-table-body').innerHTML = grades.map(g => `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding:15px; font-weight:600;">${g.materia}</td>
+                    <td style="padding:15px; text-align:center;">${g.av1}</td>
+                    <td style="padding:15px; text-align:center;">${g.av2}</td>
+                    <td style="padding:15px; text-align:center; color:var(--accent); font-weight:800;">${((g.av1+g.av2)/2).toFixed(1)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadForum() {
+            const threads = await api('/api/forum');
+            document.getElementById('forum-container').innerHTML = threads.map(t => `
+                <div class="glass" style="padding:20px; margin-bottom:15px; cursor:pointer;" onclick="openThread('${t._id}')">
+                    <h4 style="color:var(--accent)">${t.titulo}</h4>
+                    <p style="font-size:0.8rem; color:#666;">${t.replies.length} comentários • Por ${t.autor}</p>
+                </div>
+            `).join('');
+        }
+
+        async function openThread(id) {
+            const t = await api(`/api/forum/${id}`);
+            currentThread = t;
+            document.getElementById('forum-list-view').style.display = 'none';
+            document.getElementById('thread-view').style.display = 'block';
+            document.getElementById('thread-content').innerHTML = `<h2>${t.titulo}</h2><p style="margin-top:15px;">${t.conteudo}</p>`;
+            renderComments(t.replies);
+        }
+
+        function renderComments(replies, parentId = null) {
+            const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
+            if(parentId === null) container.innerHTML = '';
+            
+            replies.filter(r => r.parentId === parentId).forEach(r => {
+                const div = document.createElement('div');
+                div.className = parentId === null ? 'glass reply-box' : 'branch';
+                div.innerHTML = `
+                    <b style="color:var(--accent); font-size:0.75rem;">${r.autor}</b>
+                    <p style="margin:5px 0;">${r.texto}</p>
+                    <button onclick="showReplyInput('${r.id}')" style="background:none; border:none; color:#555; font-size:0.7rem; cursor:pointer; text-decoration:underline;">Responder</button>
+                    <div id="input-wrap-${r.id}"></div>
+                    <div id="replies-${r.id}"></div>
+                `;
+                container.appendChild(div);
+                renderComments(replies, r.id);
+            });
+        }
+
+        async function postReply(parentId) {
+            const texto = parentId ? document.getElementById(`tx-${parentId}`).value : document.getElementById('main-reply').value;
+            await api('/api/forum/reply', 'POST', { threadId: currentThread._id, texto, parentId });
+            openThread(currentThread._id);
+        }
+
+        async function loadDirecao() {
+            const users = await api('/api/direcao/users');
+            document.getElementById('user-admin-body').innerHTML = users.map(u => `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding:15px;">${u.nome}<br><small style="color:#666">${u.email}</small></td>
+                    <td style="padding:15px;"><span class="direcao-pill">${u.role.toUpperCase()}</span></td>
+                    <td style="padding:15px;">
+                        <button onclick="promoteUser('${u._id}')" style="background:none; border:none; color:var(--accent); cursor:pointer;">Promover</button> | 
+                        <button onclick="deleteUser('${u._id}')" style="background:none; border:none; color:#ff4b4b; cursor:pointer;">Remover</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function search(q, listId) {
+            const items = document.getElementById(listId).children;
+            for(let i=0; i<items.length; i++) {
+                items[i].style.display = items[i].innerText.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none';
+            }
+        }
+
+        function generatePDF() { html2pdf().from(document.getElementById('pdf-content')).save('Boletim_Vertex.pdf'); }
+        function logout() { localStorage.clear(); location.reload(); }
+        window.onload = () => { const u = localStorage.getItem('v-user'); if(u) initApp(JSON.parse(u)); };
     </script>
 </body>
 </html>
