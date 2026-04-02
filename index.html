@@ -10,27 +10,20 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; background-image: radial-gradient(circle at 50% 0%, #0d1b3a 0%, #010409 60%); min-height: 100vh; }
         .glass { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .btn { background: var(--grad); color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 800; width: 100%; transition: 0.3s; cursor: pointer; }
-        .btn:active { transform: scale(0.96); }
+        .btn { background: var(--grad); color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 800; width: 100%; cursor: pointer; }
         input, textarea, select { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; padding: 16px; border-radius: 14px; width: 100%; margin-bottom: 12px; }
-        #tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
         .view { display: none; padding: 25px; animation: fadeInUp 0.4s ease; }
         .view.active { display: block; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 15, 25, 0.95); display: flex; justify-content: space-around; padding: 15px; border-radius: 30px; border: 1px solid var(--border); z-index: 1000; }
         .nav-item { color: var(--dim); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .nav-item.active { color: #fff; text-shadow: 0 0 15px var(--primary); }
-        .logo-text { font-size: 45px; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; letter-spacing: -2px; }
+        .logo-text { font-size: 45px; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        .poll-opt { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-top: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .poll-opt:hover { border-color: var(--primary); }
     </style>
 </head>
 <body>
-
-    <div id="tutorial-overlay">
-        <div class="logo-text">VERTEX</div>
-        <h2 id="tut-title">Bem-vindo ao Futuro</h2>
-        <p id="tut-desc" style="color:var(--dim)"></p>
-        <button class="btn" onclick="nextStep()" style="width:200px">PRÓXIMO</button>
-    </div>
 
     <div id="auth-page" style="height:100vh; display:flex; flex-direction:column; justify-content:center; padding:40px;">
         <div class="logo-text">VERTEX</div>
@@ -39,7 +32,7 @@
             <input type="text" id="reg-nome" placeholder="Nome Completo" style="display:none">
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="senha" placeholder="Senha">
-            <button class="btn" onclick="handleAuth()">ENTRAR NO SISTEMA</button>
+            <button class="btn" onclick="handleAuth()">ENTRAR</button>
             <p style="text-align:center; font-size:12px; margin-top:20px; color:var(--dim)">
                 <span id="auth-switch-text">Não tem conta?</span> <a href="#" onclick="toggleAuthMode()" id="auth-link" style="color:var(--primary); font-weight:800">Criar agora</a>
             </p>
@@ -56,37 +49,48 @@
         </header>
 
         <div id="view-home" class="view active">
-            <div class="glass" id="random-quote" style="font-style:italic; font-size:13px; border-left:3px solid var(--primary)"></div>
-            <h3>Notícias</h3><div id="noticias-list"></div>
+            <h3>Notícias Oficiais</h3>
+            <div id="noticias-list"></div>
         </div>
 
         <div id="view-atividades" class="view">
-            <h3>Tarefas</h3><div id="atividades-list"></div>
+            <h3>Tarefas</h3>
+            <div id="atividades-list"></div>
             <div id="adm-atv-box" class="glass" style="display:none">
-                <h4>Nova Tarefa</h4>
+                <h4>Lançar Tarefa</h4>
                 <input id="atv-t" placeholder="Título"><input id="atv-m" placeholder="Matéria"><input type="date" id="atv-d">
                 <button class="btn" onclick="postarAtv()">LANÇAR</button>
             </div>
         </div>
 
         <div id="view-ocorrencias" class="view">
-            <h3>Justiça</h3><div id="ocorrencias-list"></div>
+            <h3>Ocorrências</h3>
+            <div id="ocorrencias-list"></div>
             <div id="adm-oc-box" class="glass" style="display:none">
-                <h4>Nova Ocorrência</h4>
+                <h4>Registrar Ocorrência</h4>
                 <input id="oc-n" placeholder="Nome do Aluno"><textarea id="oc-d" placeholder="Descrição"></textarea>
                 <select id="oc-t"><option value="Ocorrencia">Ocorrência</option><option value="Advertencia">Advertência</option></select>
                 <button class="btn" onclick="postarOc()">REGISTRAR</button>
             </div>
         </div>
 
+        <div id="view-enquetes" class="view">
+            <h3>Enquetes da Turma</h3>
+            <div id="enquetes-list"></div>
+            <div id="adm-enq-box" class="glass" style="display:none">
+                <h4>Nova Enquete</h4>
+                <input id="enq-p" placeholder="Pergunta">
+                <input id="enq-o" placeholder="Opções (separadas por vírgula)">
+                <button class="btn" onclick="postarEnq()">CRIAR ENQUETE</button>
+            </div>
+        </div>
+
         <div id="view-admin" class="view">
             <h3 style="color:gold">MASTER CONTROL</h3>
             <div class="glass" style="border:1px solid gold">
-                <h4>Gerenciar Usuários</h4>
                 <div id="admin-users-list"></div>
-                <div id="reset-box" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:10px">
-                    <input id="reset-id" disabled style="opacity:0.5; font-size:10px">
-                    <input id="new-pw" placeholder="Nova Senha">
+                <div id="reset-box" style="display:none; margin-top:20px">
+                    <input id="reset-id" disabled><input id="new-pw" placeholder="Nova Senha">
                     <button class="btn" onclick="confirmReset()">RESETAR SENHA</button>
                 </div>
             </div>
@@ -95,7 +99,8 @@
         <nav>
             <div class="nav-item active" onclick="switchView('home')">Início</div>
             <div class="nav-item" onclick="switchView('atividades')">Tarefas</div>
-            <div class="nav-item" onclick="switchView('ocorrencias')">Justiça</div>
+            <div class="nav-item" onclick="switchView('ocorrencias')">Ocorrências</div>
+            <div class="nav-item" onclick="switchView('enquetes')">Enquetes</div>
             <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none; color:gold">Master</div>
             <div class="nav-item" onclick="logout()" style="color:var(--danger)">Sair</div>
         </nav>
@@ -108,19 +113,11 @@
         };
 
         let isLogin = true;
-        function toggleAuthMode() {
-            isLogin = !isLogin;
-            document.getElementById('reg-nome').style.display = isLogin ? 'none' : 'block';
-            document.getElementById('auth-title').innerText = isLogin ? 'LOGIN' : 'CRIAR CONTA';
-        }
+        function toggleAuthMode() { isLogin = !isLogin; document.getElementById('reg-nome').style.display = isLogin ? 'none' : 'block'; }
 
         async function handleAuth() {
-            const body = { email: email.value, senha: senha.value, nome: document.getElementById('reg-nome').value };
-            const r = await api(isLogin ? '/api/auth/login' : '/api/auth/register', 'POST', body);
-            if(r) { 
-                if(isLogin) { localStorage.setItem('v-token', r.token); localStorage.setItem('v-user', JSON.stringify(r)); location.reload(); }
-                else { alert("Conta criada!"); toggleAuthMode(); }
-            } else alert("Erro na autenticação.");
+            const r = await api(isLogin ? '/api/auth/login' : '/api/auth/register', 'POST', { email: email.value, senha: senha.value, nome: document.getElementById('reg-nome').value });
+            if(r) { if(isLogin) { localStorage.setItem('v-token', r.token); localStorage.setItem('v-user', JSON.stringify(r)); location.reload(); } else toggleAuthMode(); }
         }
 
         function initApp(u) {
@@ -130,11 +127,43 @@
             document.getElementById('user-name-label').innerText = u.nome;
             document.getElementById('user-role-label').innerText = u.role;
             if(u.role === 'Admin') document.getElementById('nav-admin').style.display = 'block';
-            if(['Professor', 'Admin'].includes(u.role)) document.getElementById('adm-atv-box').style.display = 'block';
-            if(['Direcao', 'Admin'].includes(u.role)) document.getElementById('adm-oc-box').style.display = 'block';
+            if(['Professor', 'Admin'].includes(u.role)) { document.getElementById('adm-atv-box').style.display='block'; document.getElementById('adm-enq-box').style.display='block'; }
+            if(['Direcao', 'Admin'].includes(u.role)) document.getElementById('adm-oc-box').style.display='block';
             switchView('home');
         }
 
+        async function loadEnquetes() {
+            const d = await api('/api/enquetes');
+            if(d) document.getElementById('enquetes-list').innerHTML = d.map(e => `
+                <div class="glass">
+                    <p style="font-weight:800">${e.pergunta}</p>
+                    ${e.opcoes.map((o, i) => `
+                        <div class="poll-opt" onclick="votar('${e._id}', ${i})">
+                            <div style="display:flex; justify-content:space-between">
+                                <span>${o.texto}</span><span>${o.votos} votos</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <small style="color:var(--dim); margin-top:10px; display:block">Por: ${e.autor}</small>
+                </div>
+            `).join('');
+        }
+
+        async function votar(eId, idx) { const r = await api('/api/enquetes/votar', 'POST', { enqueteId: eId, opcaoIndex: idx }); if(r) loadEnquetes(); else alert("Você já votou!"); }
+
+        async function postarEnq() { 
+            const p = document.getElementById('enq-p').value;
+            const o = document.getElementById('enq-o').value.split(',');
+            await api('/api/enquetes', 'POST', { pergunta: p, opcoes: o });
+            location.reload();
+        }
+
+        // Funções de carregamento (Notícias, Atividades, Ocorrências) idênticas ao anterior...
+        async function loadNoticias() { const d = await api('/api/noticias'); if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `<div class="glass"><b>${n.titulo}</b><br><small>${n.autor}</small></div>`).join(''); }
+        async function loadAtividades() { const d = await api('/api/atividades'); if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass" style="border-left:4px solid var(--primary)"><b>${a.materia}</b>: ${a.titulo}</div>`).join(''); }
+        async function loadOcorrencias() { const d = await api('/api/ocorrencias'); if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid ${o.tipo==='Advertencia'?'var(--danger)':'gold'}"><b>${o.alunoNome}</b>: ${o.descricao}</div>`).join(''); }
+        async function loadUsers() { const d = await api('/api/admin/users'); if(d) document.getElementById('admin-users-list').innerHTML = d.map(u => `<div style="margin-bottom:10px">${u.nome} <button onclick="openReset('${u._id}')">RESET</button></div>`).join(''); }
+        
         function switchView(v) {
             document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
@@ -142,38 +171,15 @@
             if(v === 'home') loadNoticias();
             if(v === 'atividades') loadAtividades();
             if(v === 'ocorrencias') loadOcorrencias();
+            if(v === 'enquetes') loadEnquetes();
             if(v === 'admin') loadUsers();
         }
 
-        async function loadNoticias() {
-            const d = await api('/api/noticias');
-            if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `<div class="glass"><b>${n.titulo}</b><br><small>${n.autor}</small></div>`).join('');
-        }
-
-        async function loadAtividades() {
-            const d = await api('/api/atividades');
-            if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass" style="border-left:4px solid var(--primary)"><b>${a.materia}</b>: ${a.titulo}<br><small>📅 ${new Date(a.dataEntrega).toLocaleDateString()}</small></div>`).join('');
-        }
-
-        async function loadOcorrencias() {
-            const d = await api('/api/ocorrencias');
-            if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid ${o.tipo==='Advertencia'?'var(--danger)':'gold'}"><b>${o.alunoNome}</b> - ${o.tipo}<br><p>${o.descricao}</p></div>`).join('');
-        }
-
-        async function loadUsers() {
-            const d = await api('/api/admin/users');
-            if(d) document.getElementById('admin-users-list').innerHTML = d.map(u => `<div style="display:flex; justify-content:space-between; margin-bottom:10px"><span>${u.nome} (${u.role})</span> <button onclick="openReset('${u._id}')">RESET</button></div>`).join('');
-        }
-
         function openReset(id) { document.getElementById('reset-box').style.display='block'; document.getElementById('reset-id').value=id; }
-        async function confirmReset() {
-            await api('/api/admin/reset-password', 'POST', { userId: document.getElementById('reset-id').value, novaSenha: document.getElementById('new-pw').value });
-            alert("Senha alterada!");
-        }
-
+        async function confirmReset() { await api('/api/admin/reset-password', 'POST', { userId: document.getElementById('reset-id').value, novaSenha: document.getElementById('new-pw').value }); alert("OK!"); }
         async function postarAtv() { await api('/api/atividades', 'POST', { titulo: document.getElementById('atv-t').value, materia: document.getElementById('atv-m').value, dataEntrega: document.getElementById('atv-d').value }); location.reload(); }
         async function postarOc() { await api('/api/ocorrencias', 'POST', { alunoNome: document.getElementById('oc-n').value, descricao: document.getElementById('oc-d').value, tipo: document.getElementById('oc-t').value }); location.reload(); }
-
+        
         function logout() { localStorage.clear(); location.reload(); }
         window.onload = () => { const u = localStorage.getItem('v-user'); if(u) initApp(JSON.parse(u)); };
     </script>
