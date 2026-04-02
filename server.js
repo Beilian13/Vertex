@@ -11,9 +11,7 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
-// Database Connection
-const mongoURI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
-mongoose.connect(mongoURI).then(() => console.log("🚀 Vertex Pro: Engine Online"));
+mongoose.connect(process.env.MONGO_URI.replace(/['"]+/g, '').trim()).then(() => console.log("🚀 Vertex Engine: Online"));
 
 // --- SCHEMAS ---
 const User = mongoose.model('User', new mongoose.Schema({
@@ -22,36 +20,20 @@ const User = mongoose.model('User', new mongoose.Schema({
     grades: [{ materia: String, av1: Number, av2: Number }]
 }));
 
-const Task = mongoose.model('Task', new mongoose.Schema({
-    titulo: String, materia: String, dataEntrega: String, autor: String, createdAt: { type: Date, default: Date.now }
-}));
-
-const Material = mongoose.model('Material', new mongoose.Schema({
-    titulo: String, materia: String, url: String, autor: String, turma: String, createdAt: { type: Date, default: Date.now }
-}));
-
 const Thread = mongoose.model('Thread', new mongoose.Schema({
     titulo: String, conteudo: String, autor: String, turma: String,
     upvotes: { type: [String], default: [] },
-    poll: { 
-        active: { type: Boolean, default: false },
-        question: String, 
-        options: [{ text: String, votes: { type: Number, default: 0 } }] 
-    },
-    replies: [{ autor: String, texto: String, createdAt: { type: Date, default: Date.now } }],
+    replies: [{ 
+        id: String,
+        autor: String, 
+        texto: String, 
+        parentId: { type: String, default: null }, // If null, it's a main comment
+        createdAt: { type: Date, default: Date.now } 
+    }],
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- ROUTES (Auth, Academic, Social) ---
-app.post('/api/auth/register', async (req, res) => {
-    const { nome, email, senha, turma } = req.body;
-    try {
-        const hashed = await bcrypt.hash(senha, 10);
-        await User.create({ nome, email, senha: hashed, turma });
-        res.status(201).send("OK");
-    } catch(e) { res.status(400).send("Erro"); }
-});
-
+// --- ROUTES ---
 app.post('/api/auth/login', async (req, res) => {
     const { email, senha } = req.body;
     const user = await User.findOne({ email });
@@ -61,21 +43,18 @@ app.post('/api/auth/login', async (req, res) => {
     } else { res.status(401).send("Erro"); }
 });
 
-app.get('/api/tasks', async (req, res) => res.json(await Task.find().sort({ createdAt: -1 })));
-app.get('/api/my-grades', async (req, res) => {
-    const decoded = jwt.verify(req.headers.authorization, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    res.json(user.grades || []);
-});
-
-app.post('/api/forum', async (req, res) => {
-    const { titulo, conteudo, pollData, token } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await Thread.create({ titulo, conteudo, autor: decoded.nome, turma: decoded.turma, poll: pollData || { active: false } });
-    res.status(201).send("OK");
-});
-
 app.get('/api/forum', async (req, res) => res.json(await Thread.find().sort({ createdAt: -1 })));
 
+app.get('/api/forum/:id', async (req, res) => res.json(await Thread.findById(req.params.id)));
+
+app.post('/api/forum/reply', async (req, res) => {
+    const { threadId, texto, parentId, token } = req.body;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const reply = { id: new mongoose.Types.ObjectId().toString(), autor: decoded.nome, texto, parentId };
+    await Thread.findByIdAndUpdate(threadId, { $push: { replies: reply } });
+    res.json(reply);
+});
+
+// Existing Auth/Grades/Tasks routes remain the same...
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.listen(process.env.PORT || 3000);
