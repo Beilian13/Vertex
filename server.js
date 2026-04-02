@@ -15,20 +15,20 @@ const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log("🚀 Vertex Engine: Core Active"))
-    .catch(err => console.error("❌ DB Connection Error:", err));
+    .then(() => console.log("🚀 Vertex Engine: High Performance Active"))
+    .catch(err => console.error("❌ DB Error:", err));
 
+// --- SCHEMAS ---
 const User = mongoose.model('User', new mongoose.Schema({
     nome: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     senha: { type: String, required: true },
-    role: { type: String, enum: ['aluno', 'professor', 'direcao'], default: 'aluno' },
+    role: { type: String, enum: ['aluno', 'professor', 'direcao', 'admin'], default: 'aluno' },
     turma: String,
-    avatar: { type: String, default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vertex' },
-    grades: [{ materia: String, av1: Number, av2: Number }]
+    avatar: { type: String, default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vertex' }
 }));
 
-const Homework = mongoose.model('Homework', new mongoose.Schema({
+const Atividade = mongoose.model('Atividade', new mongoose.Schema({
     titulo: String, materia: String, descricao: String, dataEntrega: Date,
     autor: String, turma: String, createdAt: { type: Date, default: Date.now }
 }));
@@ -36,13 +36,34 @@ const Homework = mongoose.model('Homework', new mongoose.Schema({
 const Thread = mongoose.model('Thread', new mongoose.Schema({
     titulo: String, conteudo: String, autor: String, turma: String,
     replies: [{ id: String, autor: String, texto: String, parentId: String, createdAt: { type: Date, default: Date.now } }],
+    reported: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 }));
 
-const Mural = mongoose.model('Mural', new mongoose.Schema({
+const Noticia = mongoose.model('Noticia', new mongoose.Schema({
     titulo: String, autor: String, turma: String, createdAt: { type: Date, default: Date.now }
 }));
 
+const Ocorrencia = mongoose.model('Ocorrencia', new mongoose.Schema({
+    alunoNome: String,
+    descricao: String,
+    tipo: { type: String, enum: ['Leve', 'Media', 'Grave', 'Advertencia'], default: 'Leve' },
+    autor: String,
+    turma: String,
+    status: { type: String, enum: ['Pendente', 'Revisado', 'Arquivado'], default: 'Pendente' },
+    createdAt: { type: Date, default: Date.now }
+}));
+
+const Avaliacao = mongoose.model('Avaliacao', new mongoose.Schema({
+    alunoId: mongoose.Schema.Types.ObjectId,
+    materia: String,
+    nota: Number,
+    tipo: String, // ex: AV1, AV2, Simulado
+    autor: String,
+    createdAt: { type: Date, default: Date.now }
+}));
+
+// --- AUTH MIDDLEWARE ---
 const authorize = (roles = []) => (req, res, next) => {
     try {
         const token = req.headers.authorization;
@@ -54,15 +75,7 @@ const authorize = (roles = []) => (req, res, next) => {
     } catch (e) { res.status(401).json({ msg: "Sessão Expirada" }); }
 };
 
-app.post('/api/auth/register', async (req, res) => {
-    try {
-        const { nome, email, senha, turma } = req.body;
-        const hashed = await bcrypt.hash(senha, 10);
-        await User.create({ nome, email, senha: hashed, turma, role: 'aluno' });
-        res.status(201).json({ msg: "Sucesso" });
-    } catch (e) { res.status(400).json({ msg: "Erro no registro" }); }
-});
-
+// --- ROUTES ---
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
@@ -71,35 +84,51 @@ app.post('/api/auth/login', async (req, res) => {
             const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome, turma: user.turma }, process.env.JWT_SECRET);
             res.json({ token, role: user.role, nome: user.nome, turma: user.turma, avatar: user.avatar });
         } else res.status(401).json({ msg: "Credenciais Inválidas" });
-    } catch (e) { res.status(500).json({ msg: "Erro no Servidor" }); }
+    } catch (e) { res.status(500).json({ msg: "Erro" }); }
 });
 
-app.get('/api/mural', authorize(), async (req, res) => res.json(await Mural.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
-app.post('/api/mural', authorize(['professor', 'direcao']), async (req, res) => {
-    res.json(await Mural.create({ titulo: req.body.titulo, autor: req.user.nome, turma: req.user.turma }));
+// NOTICIAS (Ex-Mural)
+app.get('/api/noticias', authorize(), async (req, res) => res.json(await Noticia.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
+app.post('/api/noticias', authorize(['professor', 'direcao', 'admin']), async (req, res) => {
+    res.json(await Noticia.create({ titulo: req.body.titulo, autor: req.user.nome, turma: req.user.turma }));
 });
 
-app.get('/api/homeworks', authorize(), async (req, res) => res.json(await Homework.find({ turma: req.user.turma }).sort({ dataEntrega: 1 })));
-app.post('/api/homeworks', authorize(['professor', 'direcao']), async (req, res) => {
-    res.json(await Homework.create({ ...req.body, autor: req.user.nome, turma: req.user.turma }));
+// ATIVIDADES (Ex-Tarefas)
+app.get('/api/atividades', authorize(), async (req, res) => res.json(await Atividade.find({ turma: req.user.turma }).sort({ dataEntrega: 1 })));
+app.post('/api/atividades', authorize(['professor', 'direcao', 'admin']), async (req, res) => {
+    res.json(await Atividade.create({ ...req.body, autor: req.user.nome, turma: req.user.turma }));
+});
+
+// OCORRENCIAS (The Court System)
+app.get('/api/ocorrencias', authorize(['professor', 'direcao', 'admin']), async (req, res) => res.json(await Ocorrencia.find().sort({ createdAt: -1 })));
+app.post('/api/ocorrencias', authorize(['professor', 'direcao', 'admin']), async (req, res) => {
+    res.json(await Ocorrencia.create({ ...req.body, autor: req.user.nome }));
+});
+app.patch('/api/ocorrencias/:id', authorize(['direcao', 'admin']), async (req, res) => {
+    res.json(await Ocorrencia.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+});
+
+// AVALIACOES
+app.get('/api/avaliacoes/me', authorize(), async (req, res) => res.json(await Avaliacao.find({ alunoId: req.user.id })));
+app.post('/api/avaliacoes', authorize(['professor', 'direcao', 'admin']), async (req, res) => {
+    res.json(await Avaliacao.create({ ...req.body, autor: req.user.nome }));
+});
+
+// FORUM & BULLYING REPORTING
+app.post('/api/forum/report/:id', authorize(), async (req, res) => {
+    const thread = await Thread.findByIdAndUpdate(req.params.id, { reported: true });
+    // Auto-generate occurrence for the author if reported
+    await Ocorrencia.create({
+        alunoNome: thread.autor,
+        descricao: `Reportado por bullying/conduta no Fórum: "${thread.titulo}"`,
+        tipo: 'Media',
+        autor: 'Sistema Vertex (Report)'
+    });
+    res.json({ msg: "Reportado para análise" });
 });
 
 app.get('/api/forum', authorize(), async (req, res) => res.json(await Thread.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
-app.get('/api/forum/:id', authorize(), async (req, res) => res.json(await Thread.findById(req.params.id)));
-app.post('/api/forum', authorize(), async (req, res) => {
-    res.json(await Thread.create({ ...req.body, autor: req.user.nome, turma: req.user.turma }));
-});
-
-app.post('/api/forum/reply', authorize(), async (req, res) => {
-    const reply = { id: new mongoose.Types.ObjectId().toString(), autor: req.user.nome, texto: req.body.texto, parentId: req.body.parentId };
-    await Thread.findByIdAndUpdate(req.body.threadId, { $push: { replies: reply } });
-    res.json(reply);
-});
-
-app.get('/api/me/grades', authorize(), async (req, res) => {
-    const user = await User.findById(req.user.id);
-    res.json(user.grades || []);
-});
+app.post('/api/forum', authorize(), async (req, res) => res.json(await Thread.create({ ...req.body, autor: req.user.nome, turma: req.user.turma })));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Engine Live`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Live`));
