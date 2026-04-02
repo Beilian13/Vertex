@@ -3,66 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex | Login</title>
+    <title>Vertex | Sistema Escolar</title>
     <style>
-        :root { --primary: #007BFF; --bg: #000; --card: #121212; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
-        .header { border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 30px; }
-        .auth-box { background: var(--card); padding: 20px; border-radius: 12px; max-width: 350px; margin: auto; }
-        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-        input { background: #222; color: #fff; }
-        button { background: var(--primary); color: #fff; font-weight: bold; cursor: pointer; }
-        .admin-only { display: none; border: 1px dashed var(--primary); padding: 10px; margin-top: 20px; }
+        :root {
+            --primary: #007BFF;
+            --bg: #050505;
+            --card: #111111;
+            --text: #e0e0e0;
+            --border: #222222;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        /* --- AUTH BOX --- */
+        .auth-box {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .auth-box h2 {
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            border-left: 4px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { opacity: 0.8; transform: translateY(-2px); }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #888;
+            cursor: pointer;
+        }
+
+        /* --- DASHBOARD --- */
+        #main-screen {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            background: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        .header-dash {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .role-badge {
+            background: rgba(0, 123, 255, 0.1);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .admin-panel {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px dashed var(--primary);
+            border-radius: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="auth-box">
-        <h2>Vertex Login</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Senha">
-        <button onclick="login()">Entrar</button>
-    </div>
-
-    <div id="main-screen" style="display:none;">
-        <div class="header">
-            <h1 id="welcome">Bem-vindo</h1>
-            <p id="role-tag" style="color: var(--primary); font-weight: bold;"></p>
+    <div class="container" id="auth-container">
+        <div id="register-section" class="auth-box">
+            <h2>Vertex <span style="font-weight: 200; font-size: 0.9rem;">Join</span></h2>
+            <input type="text" id="reg-nome" placeholder="Nome Completo">
+            <input type="email" id="reg-email" placeholder="E-mail">
+            <input type="password" id="reg-pass" placeholder="Senha">
+            <input type="text" id="reg-turma" placeholder="Turma (Ex: 8B)">
+            <button onclick="handleAuth('register')">Criar Conta</button>
+            <p class="toggle-link" onclick="toggleAuth()">Já tem conta? Entrar</p>
         </div>
 
-        <div id="admin-panel" class="admin-only">
-            <h3>Painel de Direção</h3>
-            <input type="text" id="targetEmail" placeholder="Email do Aluno">
-            <select id="newRole">
+        <div id="login-section" class="auth-box" style="display:none;">
+            <h2>Vertex <span style="font-weight: 200; font-size: 0.9rem;">Login</span></h2>
+            <input type="email" id="log-email" placeholder="E-mail">
+            <input type="password" id="log-pass" placeholder="Senha">
+            <button onclick="handleAuth('login')">Acessar Sistema</button>
+            <p class="toggle-link" onclick="toggleAuth()">Não tem conta? Registrar</p>
+        </div>
+    </div>
+
+    <div id="main-screen">
+        <div class="header-dash">
+            <div>
+                <h1 id="welcome-user">Olá, Usuário</h1>
+                <p id="user-turma" style="color: #666;"></p>
+            </div>
+            <span class="role-badge" id="role-tag">Aluno</span>
+        </div>
+
+        <div class="content">
+            <h3>Suas Atividades</h3>
+            <p style="color: #444; margin-top: 10px;">Nenhuma tarefa pendente no momento.</p>
+        </div>
+
+        <div id="admin-panel" class="admin-panel">
+            <h4 style="color: var(--primary); margin-bottom: 15px;">Gestão de Acessos</h4>
+            <input type="text" id="targetEmail" placeholder="E-mail do Aluno">
+            <select id="newRole" style="width: 100%; padding: 10px; background: #1a1a1a; color: white; border: 1px solid #222; border-radius: 8px;">
                 <option value="representante">Representante</option>
                 <option value="professor">Professor</option>
                 <option value="direcao">Direção</option>
             </select>
-            <button onclick="updateRole()">Mudar Cargo</button>
+            <button onclick="updateRole()" style="background: #222; border: 1px solid var(--primary);">Atualizar Cargo</button>
         </div>
     </div>
 
     <script>
-        async function login() {
-            const email = document.getElementById('email').value;
-            const senha = document.getElementById('pass').value;
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, senha })
-            });
-            const data = await res.json();
-            if(data.token) {
-                localStorage.setItem('v-token', data.token);
-                showDashboard(data);
-            }
+        function toggleAuth() {
+            const reg = document.getElementById('register-section');
+            const log = document.getElementById('login-section');
+            reg.style.display = reg.style.display === 'none' ? 'block' : 'none';
+            log.style.display = log.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function handleAuth(type) {
+            const isReg = type === 'register';
+            const payload = isReg ? {
+                nome: document.getElementById('reg-nome').value,
+                email: document.getElementById('reg-email').value,
+                senha: document.getElementById('reg-pass').value,
+                turma: document.getElementById('reg-turma').value
+            } : {
+                email: document.getElementById('log-email').value,
+                senha: document.getElementById('log-pass').value
+            };
+
+            const endpoint = isReg ? '/api/auth/register' : '/api/auth/login';
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (isReg) {
+                    if(res.ok) { alert("Sucesso! Faça o login."); toggleAuth(); }
+                    else alert("Erro no registro.");
+                } else {
+                    const data = await res.json();
+                    if(data.token) {
+                        localStorage.setItem('v-token', data.token);
+                        showDashboard(data);
+                    } else alert("Falha no login.");
+                }
+            } catch (e) { alert("Erro de conexão com o servidor."); }
         }
 
         function showDashboard(user) {
-            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'none';
             document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('welcome').innerText = `Olá, ${user.nome}`;
-            document.getElementById('role-tag').innerText = `Cargo: ${user.role}`;
+            document.getElementById('welcome-user').innerText = `Olá, ${user.nome}`;
+            document.getElementById('role-tag').innerText = user.role;
             
             if(user.role === 'admin' || user.role === 'direcao') {
                 document.getElementById('admin-panel').style.display = 'block';
@@ -73,12 +227,15 @@
             const targetEmail = document.getElementById('targetEmail').value;
             const newRole = document.getElementById('newRole').value;
             const token = localStorage.getItem('v-token');
+            
             const res = await fetch('/api/admin/update-role', {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ targetEmail, newRole, token })
             });
-            alert(await res.text());
+            
+            const msg = await res.text();
+            alert(msg);
         }
     </script>
 </body>
