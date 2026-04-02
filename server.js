@@ -102,24 +102,47 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
-        const user = await User.findOne({ email });
         
-        if (user && await bcrypt.compare(senha, user.senha)) {
-            const token = jwt.sign(
-                { id: user._id, role: user.role, nome: user.nome, turma: user.turma }, 
-                process.env.JWT_SECRET,
-                { expiresIn: '7d' }
-            );
-            
-            user.lastLogin = Date.now(); 
-            await user.save();
-            
-            res.json({ token, role: user.role, nome: user.nome, turma: user.turma, avatar: user.avatar });
-        } else {
-            res.status(401).json({ msg: "Credenciais inválidas" });
+        // 1. Safety Check for JWT
+        if (!process.env.JWT_SECRET) {
+            console.error("❌ LOGIN ERROR: JWT_SECRET is missing from Environment Variables!");
+            return res.status(500).json({ msg: "Server configuration error" });
         }
+
+        // 2. Find User
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ msg: "Usuário não encontrado" });
+        }
+
+        // 3. Compare Password
+        const isMatch = await bcrypt.compare(senha, user.senha);
+        if (!isMatch) {
+            return res.status(401).json({ msg: "Senha incorreta" });
+        }
+
+        // 4. Generate Token
+        const token = jwt.sign(
+            { id: user._id, role: user.role, nome: user.nome, turma: user.turma }, 
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        // 5. Update last login
+        user.lastLogin = Date.now(); 
+        await user.save();
+        
+        res.json({ 
+            token, 
+            role: user.role, 
+            nome: user.nome, 
+            turma: user.turma, 
+            avatar: user.avatar 
+        });
+
     } catch (e) {
-        res.status(500).json({ msg: "Erro interno no servidor" });
+        console.error("❌ CRITICAL LOGIN CRASH:", e);
+        res.status(500).json({ msg: "Erro interno no processamento do login" });
     }
 });
 
