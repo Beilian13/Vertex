@@ -76,6 +76,37 @@ const authorize = (roles = []) => (req, res, next) => {
 };
 
 // --- ROUTES ---
+
+// --- ROTA DE REGISTRO (Para novos alunos/professores) ---
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { nome, email, senha, role, turma } = req.body;
+
+        // Verifica se o usuário já existe
+        const userExists = await User.findOne({ email });
+        if (userExists) return res.status(400).json({ msg: "Email já cadastrado." });
+
+        // Criptografa a senha (Segurança nível Profissional)
+        const salt = await bcrypt.genSalt(10);
+        const hashedSenha = await bcrypt.hash(senha, salt);
+
+        // Cria o usuário
+        const newUser = await User.create({
+            nome,
+            email,
+            senha: hashedSenha,
+            role: role || 'aluno',
+            turma: turma || '8A', // Padrão 8º ano como você queria
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${nome}`
+        });
+
+        res.status(201).json({ msg: "Usuário criado com sucesso!" });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ msg: "Erro ao registrar usuário." });
+    }
+});
+
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
