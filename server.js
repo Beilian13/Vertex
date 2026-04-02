@@ -11,25 +11,23 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
-// --- CONFIGURAÇÕES ---
-// Se as variáveis de ambiente do Render falharem, ele usa as suas fixas como fallback
+// --- CONFIGURAÇÕES DE FUNDADOR ---
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://beilianalvarenga_db_user:Beilian1010@cluster0.hhyotua.mongodb.net/Vertex?retryWrites=true&w=majority";
 const JWT_SECRET = process.env.JWT_SECRET || "beilian_secret_key_123";
 const PORT = process.env.PORT || 10000;
 
 // --- CONEXÃO MONGODB ---
-// O parâmetro dbName: 'Vertex' garante que ele crie o banco se não existir
 mongoose.connect(MONGO_URI, { dbName: 'Vertex' })
-    .then(() => console.log("✅ [DATABASE] Conectado ao cluster do Beilian - Banco: Vertex"))
-    .catch(err => console.error("❌ [DATABASE] Erro de conexão:", err.message));
+    .then(() => console.log("✅ [DATABASE] Vertex Blue Edition Conectada"))
+    .catch(err => console.error("❌ [DATABASE] Erro:", err.message));
 
-// --- SCHEMAS (Coleções que serão criadas automaticamente) ---
+// --- SCHEMAS (Baseados no seu HTML) ---
 
 const User = mongoose.model('User', new mongoose.Schema({
-    nome: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    senha: { type: String, required: true },
-    role: { type: String, default: 'admin' }, // Primeiro usuário como admin para teste
+    nome: String,
+    email: { type: String, unique: true },
+    senha: String,
+    role: { type: String, default: 'aluno' },
     avatar: { type: String, default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vertex' }
 }));
 
@@ -39,92 +37,106 @@ const Noticia = mongoose.model('Noticia', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-const AiRequest = mongoose.model('AiRequest', new mongoose.Schema({
+const Atividade = mongoose.model('Atividade', new mongoose.Schema({
+    titulo: String,
+    materia: String,
+    dataEntrega: Date,
+    autor: String
+}));
+
+const Ocorrencia = mongoose.model('Ocorrencia', new mongoose.Schema({
     alunoNome: String,
-    pergunta: String,
-    resposta: { type: String, default: "" },
-    status: { type: String, default: 'pendente' }
+    descricao: String,
+    tipo: { type: String, enum: ['Advertencia', 'Ocorrencia'], default: 'Ocorrencia' },
+    status: { type: String, default: 'Em Processo' },
+    createdAt: { type: Date, default: Date.now }
+}));
+
+const Forum = mongoose.model('Forum', new mongoose.Schema({
+    titulo: String,
+    autor: String,
+    reportado: { type: Boolean, default: false }
 }));
 
 // --- MIDDLEWARE DE AUTENTICAÇÃO ---
 const authenticate = (req, res, next) => {
     const token = req.headers.authorization;
-    if (!token) return res.status(401).json({ msg: "Acesso negado. Faça login." });
+    if (!token) return res.status(401).json({ msg: "Acesso negado" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
         next();
-    } catch (e) { res.status(401).json({ msg: "Token inválido ou expirado." }); }
+    } catch (e) { res.status(401).json({ msg: "Sessão expirada" }); }
 };
 
 // --- ROTAS DE AUTENTICAÇÃO ---
 
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { nome, email, senha } = req.body;
-        
-        const userExists = await User.findOne({ email });
-        if (userExists) return res.status(400).json({ msg: "Este email já está registrado." });
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedSenha = await bcrypt.hash(senha, salt);
-
-        const newUser = await User.create({
-            nome,
-            email,
-            senha: hashedSenha,
-            role: 'admin' // Definindo como admin para você ter controle total
+        const { nome, email, senha, role } = req.body;
+        const hashed = await bcrypt.hash(senha, 10);
+        const user = await User.create({ 
+            nome, 
+            email, 
+            senha: hashed, 
+            role: role || 'aluno',
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${nome}`
         });
-
-        console.log(`🚀 [REGISTER] Usuário criado: ${email}`);
-        res.status(201).json({ msg: "Conta criada com sucesso!" });
-    } catch (e) {
-        console.error("❌ [REGISTER ERROR]:", e.message);
-        res.status(500).json({ msg: "Erro interno no servidor.", erro: e.message });
-    }
+        res.status(201).json({ msg: "Criado!" });
+    } catch (e) { res.status(500).json({ msg: "Erro no registro." }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, senha } = req.body;
-        const user = await User.findOne({ email });
-        
-        if (!user) return res.status(401).json({ msg: "Usuário não encontrado." });
-
-        const isMatch = await bcrypt.compare(senha, user.senha);
-        if (!isMatch) return res.status(401).json({ msg: "Senha incorreta." });
-
-        const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome }, JWT_SECRET, { expiresIn: '7d' });
-        
-        console.log(`🔑 [LOGIN] ${user.nome} entrou no sistema.`);
+    const { email, senha } = req.body;
+    const user = await User.findOne({ email });
+    if (user && await bcrypt.compare(senha, user.senha)) {
+        const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome }, JWT_SECRET);
         res.json({ token, nome: user.nome, role: user.role, avatar: user.avatar });
-    } catch (e) {
-        res.status(500).json({ msg: "Erro ao processar login." });
+    } else {
+        res.status(401).json({ msg: "E-mail ou senha incorretos." });
     }
 });
 
-// --- ROTAS DE FUNCIONALIDADES ---
+// --- ROTAS DO APP (Sincronizadas com seu JS) ---
 
 app.get('/api/noticias', authenticate, async (req, res) => {
-    const news = await Noticia.find().sort({ createdAt: -1 });
-    res.json(news);
+    res.json(await Noticia.find().sort({ createdAt: -1 }));
 });
 
-app.post('/api/ai/ask', authenticate, async (req, res) => {
-    const request = await AiRequest.create({ alunoNome: req.user.nome, pergunta: req.body.prompt });
-    res.json(request);
+app.get('/api/atividades', authenticate, async (req, res) => {
+    res.json(await Atividade.find().sort({ dataEntrega: 1 }));
 });
 
-// --- SERVIR FRONTEND ---
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/api/ocorrencias', authenticate, async (req, res) => {
+    // Se for admin, vê tudo. Se for aluno, só as dele.
+    const query = req.user.role === 'admin' ? {} : { alunoNome: req.user.nome };
+    res.json(await Ocorrencia.find(query).sort({ createdAt: -1 }));
 });
 
-// --- START SERVER ---
+app.get('/api/forum', authenticate, async (req, res) => {
+    res.json(await Forum.find({ reportado: false }));
+});
+
+app.post('/api/forum/report/:id', authenticate, async (req, res) => {
+    try {
+        const post = await Forum.findByIdAndUpdate(req.params.id, { reportado: true });
+        // Lógica de "Justiça Automática"
+        await Ocorrencia.create({
+            alunoNome: post.autor,
+            descricao: `Conteúdo impróprio reportado no fórum: "${post.titulo}"`,
+            tipo: 'Advertencia',
+            status: 'Análise de Bullying'
+        });
+        res.json({ msg: "Reportado com sucesso" });
+    } catch (e) { res.status(500).json({ msg: "Erro ao reportar" }); }
+});
+
+// --- SERVIR O FRONTEND ---
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n=========================================`);
-    console.log(`   VERTEX SYSTEM v2.0 - FOUNDER EDITION  `);
-    console.log(`   STATUS: ONLINE                        `);
+    console.log(`\n-----------------------------------------`);
+    console.log(`   VERTEX BLUE EDITION - ONLINE          `);
     console.log(`   PORTA: ${PORT}                        `);
-    console.log(`=========================================\n`);
+    console.log(`-----------------------------------------\n`);
 });
