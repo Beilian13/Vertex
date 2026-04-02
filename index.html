@@ -170,35 +170,44 @@
     }
 
     async function handleAuth() {
-        const emailVal = document.getElementById('email').value;
-        const senhaVal = document.getElementById('senha').value;
-        const body = isLogin ? { email: emailVal, senha: senhaVal } : { 
-            email: emailVal, 
-            senha: senhaVal, 
-            nome: document.getElementById('reg-nome').value, 
-            turma: document.getElementById('reg-turma').value 
-        };
-        
+    const emailVal = document.getElementById('email').value;
+    const senhaVal = document.getElementById('senha').value;
+    
+    // Construct the payload based on login or register state
+    let payload = { email: emailVal, senha: senhaVal };
+    if (!isLogin) {
+        payload.nome = document.getElementById('reg-nome').value;
+        payload.turma = document.getElementById('reg-turma').value;
+    }
+
+    try {
         const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', { 
             method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(body) 
+            headers: { 
+                'Content-Type': 'application/json' // CRITICAL: Fixes the 400 Error
+            }, 
+            body: JSON.stringify(payload) 
         });
+
+        const data = await res.json();
 
         if (res.ok) {
             if (isLogin) {
-                const data = await res.json();
                 localStorage.setItem('v-token', data.token); 
                 localStorage.setItem('v-user', JSON.stringify(data));
-                initApp(data);
+                window.location.reload(); // Refresh to boot the app with the new user
             } else { 
-                notify("Conta Criada!"); 
+                alert("Conta Criada! Faça login agora."); 
                 toggleAuth(); 
             }
         } else {
-            alert("Erro na autenticação.");
+            alert(data.msg || "Erro na operação");
         }
+    } catch (err) {
+        console.error("Network Error:", err);
+        alert("Erro de conexão com o servidor.");
     }
+}
 
     function initApp(u) {
         document.getElementById('auth-page').style.display = 'none';
