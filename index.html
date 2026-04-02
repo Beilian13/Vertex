@@ -1,96 +1,175 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertex | Sistema de Gestão Escolar</title>
+    <title>Vertex | Management System</title>
     <style>
-        :root { --primary: #007BFF; --bg: #050505; --card: #111; --text: #eee; --border: #222; }
+        :root { 
+            --primary: #007BFF; 
+            --bg: #050505; 
+            --card: #111; 
+            --text: #eee; 
+            --border: #222;
+            --sidebar-w: 240px;
+            --sidebar-collapsed: 70px;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-        
-        .container { width: 100%; max-width: 500px; padding: 20px; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        /* --- AUTH SCREEN --- */
+        #auth-container { 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+        }
         .box { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
         h2 { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 20px; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; color: #fff; }
         button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { opacity: 0.8; }
 
-        .task-card { background: #181818; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid var(--primary); }
-        .badge { background: rgba(0,123,255,0.2); color: var(--primary); padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; text-transform: uppercase; }
+        /* --- DASHBOARD LAYOUT --- */
+        #main-screen { display: none; display: flex; }
         
-        #main-screen { display: none; width: 100%; max-width: 700px; }
-        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout-btn { background: #ff4444; width: auto; padding: 5px 15px; font-size: 0.8rem; }
+        /* SIDEBAR */
+        #sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: #0a0a0a;
+            border-right: 1px solid var(--border);
+            position: fixed;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 10px;
+            z-index: 100;
+        }
+
+        #sidebar.collapsed { width: var(--sidebar-collapsed); }
+        #sidebar.collapsed .menu-text { display: none; }
+        #sidebar.collapsed .logo-text { display: none; }
+
+        .menu-item {
+            padding: 15px;
+            margin: 5px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: 0.2s;
+            color: #888;
+        }
+        .menu-item:hover { background: #151515; color: #fff; }
+        .menu-item.active { background: rgba(0,123,255,0.1); color: var(--primary); }
+        .icon { font-size: 1.2rem; margin-right: 15px; min-width: 30px; text-align: center; }
+
+        /* CONTENT AREA */
+        #content-area {
+            flex-grow: 1;
+            margin-left: var(--sidebar-w);
+            padding: 40px;
+            transition: 0.3s;
+        }
+        #sidebar.collapsed ~ #content-area { margin-left: var(--sidebar-collapsed); }
+
+        .task-card { background: #121212; padding: 20px; border-radius: 12px; margin-top: 15px; border: 1px solid var(--border); border-left: 4px solid var(--primary); }
+        .badge { background: rgba(0,123,255,0.1); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-transform: uppercase; font-weight: bold; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .toggle-btn { cursor: pointer; font-size: 1.5rem; margin-bottom: 30px; padding-left: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="auth-container">
-        <div id="reg-box" class="box">
-            <h2>Criar Conta</h2>
-            <input type="text" id="reg-nome" placeholder="Nome Completo">
-            <input type="email" id="reg-email" placeholder="E-mail">
-            <input type="password" id="reg-pass" placeholder="Senha">
-            <input type="text" id="reg-turma" placeholder="Turma (Ex: 8A)">
-            <button onclick="auth('register')">Registrar</button>
-            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer" onclick="toggle()">Já tem conta? Login</p>
+    <div id="auth-container">
+        <div id="reg-box" class="box" style="width: 400px;">
+            <h2>Register</h2>
+            <input type="text" id="reg-nome" placeholder="Full Name">
+            <input type="email" id="reg-email" placeholder="Email">
+            <input type="password" id="reg-pass" placeholder="Password">
+            <input type="text" id="reg-turma" placeholder="Class (e.g. 8A)">
+            <button onclick="auth('register')">Create Account</button>
+            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer" onclick="toggleAuth()">Login instead</p>
         </div>
 
-        <div id="log-box" class="box" style="display:none">
-            <h2>Entrar no Vertex</h2>
-            <input type="email" id="log-email" placeholder="E-mail">
-            <input type="password" id="log-pass" placeholder="Senha">
-            <button onclick="auth('login')">Entrar</button>
-            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer" onclick="toggle()">Não tem conta? Cadastro</p>
+        <div id="log-box" class="box" style="display:none; width: 400px;">
+            <h2>Vertex Login</h2>
+            <input type="email" id="log-email" placeholder="Email">
+            <input type="password" id="log-pass" placeholder="Password">
+            <button onclick="auth('login')">Enter System</button>
+            <p style="text-align:center; margin-top:15px; font-size:0.8rem; cursor:pointer" onclick="toggleAuth()">Register account</p>
         </div>
     </div>
 
-    <div id="main-screen">
-        <div class="nav">
-            <div>
-                <h1 id="user-name">Olá</h1>
-                <span id="user-role" class="badge">Aluno</span>
+    <div id="main-screen" style="display: none;">
+        <nav id="sidebar">
+            <div class="toggle-btn" onclick="toggleSidebar()">☰</div>
+            <h3 class="logo-text" style="padding-left: 10px; margin-bottom: 40px; color: var(--primary);">VERTEX</h3>
+            
+            <div class="menu-item active">
+                <span class="icon">🏠</span>
+                <span class="menu-text">Home</span>
             </div>
-            <button class="logout-btn" onclick="logout()">Sair</button>
-        </div>
+            <div class="menu-item">
+                <span class="icon">📚</span>
+                <span class="menu-text">Materials</span>
+            </div>
+            <div class="menu-item" onclick="logout()">
+                <span class="icon">🚪</span>
+                <span class="menu-text">Logout</span>
+            </div>
+        </nav>
 
-        <div id="professor-panel" class="box" style="display:none; margin-bottom: 20px;">
-            <h3>Postar Atividade</h3>
-            <input type="text" id="task-materia" placeholder="Matéria">
-            <input type="text" id="task-titulo" placeholder="Título da Atividade">
-            <input type="date" id="task-date">
-            <button onclick="postTask()" style="background: #28a745;">Publicar</button>
-        </div>
+        <main id="content-area">
+            <header class="header">
+                <div>
+                    <h1 id="user-name">Welcome</h1>
+                    <span id="user-role" class="badge">Student</span>
+                </div>
+            </header>
 
-        <div id="admin-panel" class="box" style="display:none; margin-bottom: 20px; border: 1px solid gold;">
-            <h3>Gestão de Cargos</h3>
-            <input type="text" id="admin-target" placeholder="E-mail do usuário">
-            <select id="admin-role">
-                <option value="representante">Representante</option>
-                <option value="professor">Professor</option>
-                <option value="direcao">Direção</option>
-            </select>
-            <button onclick="updateRole()">Alterar Cargo</button>
-        </div>
+            <div id="professor-panel" class="box" style="display:none; margin-bottom: 30px;">
+                <h3>Post Activity</h3>
+                <input type="text" id="task-materia" placeholder="Subject">
+                <input type="text" id="task-titulo" placeholder="Activity Title">
+                <input type="date" id="task-date">
+                <button onclick="postTask()" style="background: #28a745;">Publish</button>
+            </div>
 
-        <div class="box">
-            <h3>Atividades da Semana</h3>
-            <div id="task-list"></div>
-        </div>
+            <div id="admin-panel" class="box" style="display:none; margin-bottom: 30px; border-color: gold;">
+                <h3>Admin Management</h3>
+                <input type="text" id="admin-target" placeholder="User Email">
+                <select id="admin-role">
+                    <option value="representante">Representative</option>
+                    <option value="professor">Professor</option>
+                    <option value="direcao">Direction</option>
+                </select>
+                <button onclick="updateRole()">Change Role</button>
+            </div>
+
+            <div class="box">
+                <h3>Latest Activities</h3>
+                <div id="task-list"></div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // PERSISTÊNCIA: Ao carregar a página, vê se já está logado
+        // Persistence
         window.onload = () => {
             const user = localStorage.getItem('v-user');
             if(user) showDashboard(JSON.parse(user));
         };
 
-        function toggle() {
-            document.getElementById('reg-box').style.display = document.getElementById('reg-box').style.display === 'none' ? 'block' : 'none';
-            document.getElementById('log-box').style.display = document.getElementById('log-box').style.display === 'none' ? 'block' : 'none';
+        function toggleAuth() {
+            const r = document.getElementById('reg-box');
+            const l = document.getElementById('log-box');
+            r.style.display = r.style.display === 'none' ? 'block' : 'none';
+            l.style.display = l.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
         async function auth(type) {
@@ -112,20 +191,20 @@
             });
 
             if(res.ok) {
-                if(isReg) { alert("Registrado! Agora faça login."); toggle(); }
+                if(isReg) { alert("Registered! You can login now."); toggleAuth(); }
                 else {
                     const user = await res.json();
                     localStorage.setItem('v-user', JSON.stringify(user));
                     localStorage.setItem('v-token', user.token);
                     showDashboard(user);
                 }
-            } else { alert("Erro na operação."); }
+            } else { alert("Auth Failed."); }
         }
 
         function showDashboard(user) {
             document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('main-screen').style.display = 'block';
-            document.getElementById('user-name').innerText = `Olá, ${user.nome}`;
+            document.getElementById('main-screen').style.display = 'flex';
+            document.getElementById('user-name').innerText = `Hello, ${user.nome}`;
             document.getElementById('user-role').innerText = user.role;
 
             if(['admin', 'direcao', 'professor'].includes(user.role)) {
@@ -141,11 +220,11 @@
             const res = await fetch('/api/tasks');
             const tasks = await res.json();
             const list = document.getElementById('task-list');
-            list.innerHTML = tasks.length ? '' : '<p>Sem tarefas.</p>';
+            list.innerHTML = tasks.length ? '' : '<p>No tasks found.</p>';
             tasks.forEach(t => {
                 list.innerHTML += `<div class="task-card">
                     <strong>${t.materia}</strong>: ${t.titulo}<br>
-                    <small style="color:#888">Entrega: ${t.dataEntrega} | Por: ${t.autor}</small>
+                    <small style="color:#666">Due: ${t.dataEntrega} | By: ${t.autor}</small>
                 </div>`;
             });
         }
