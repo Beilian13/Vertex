@@ -100,26 +100,18 @@
         async function loadForum() {
             const d = await api('/api/forum');
             if(d) document.getElementById('forum-list').innerHTML = d.map(t => `
-                <div class="glass">
-                    <div style="font-size:10px; color:var(--primary); font-weight:800">${t.autor} perguntou:</div>
-                    <b style="font-size:16px">${t.titulo}</b>
-                    <p style="font-size:13px; color:var(--dim)">${t.conteudo}</p>
-                    
-                    ${t.temEnquete ? `
-                        <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin:10px 0">
-                            <p style="font-size:11px; font-weight:800">📊 ${t.enquete.pergunta}</p>
-                            ${t.enquete.opcoes.map((o, i) => `<div class="poll-opt" onclick="votar('${t._id}', ${i})">${o.texto} (${o.votos} votos)</div>`).join('')}
-                        </div>
-                    ` : ''}
-
-                    <div id="comments-${t._id}">
-                        ${t.comentarios.map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
-                    </div>
-                    <div style="display:flex; gap:5px; margin-top:10px">
-                        <input id="in-${t._id}" placeholder="Escreva um comentário..." style="margin:0; padding:8px; font-size:11px">
-                        <button class="btn" onclick="comentar('${t._id}')" style="width:70px; padding:0">ENVIAR</button>
-                    </div>
-                </div>
+                <div class="glass" style="margin-top:20px">
+    <h4>Novo Tópico</h4>
+    <input id="f-tit" placeholder="Título do Assunto">
+    <textarea id="f-con" placeholder="O que você quer falar?"></textarea>
+    
+    <div style="border: 1px dashed var(--border); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+        <p style="font-size:10px; color:var(--dim)">ADICIONAR ENQUETE (Opcional)</p>
+        <input id="f-enq-p" placeholder="Pergunta da Enquete">
+        <input id="f-enq-o" placeholder="Opções (ex: Sim, Não, Talvez)">
+    </div>
+    <button class="btn" onclick="postarThread()">POSTAR NO FÓRUM</button>
+</div>
             `).join('');
         }
 
