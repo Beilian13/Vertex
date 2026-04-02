@@ -14,18 +14,19 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI ? process.env.MONGO_URI.replace(/['"]+/g, '').trim() : null;
 
+// Database Connection
 mongoose.connect(MONGO_URI)
     .then(() => console.log("🚀 Vertex Engine: Core Active"))
     .catch(err => console.error("❌ Critical Connection Failure:", err));
 
-// --- SCHEMAS ---
+// --- DATA MODELS ---
 const User = mongoose.model('User', new mongoose.Schema({
     nome: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     senha: { type: String, required: true },
     role: { type: String, enum: ['aluno', 'professor', 'direcao'], default: 'aluno' },
     turma: String,
-    avatar: { type: String, default: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' },
+    avatar: { type: String, default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vertex' },
     grades: [{ materia: String, av1: Number, av2: Number }]
 }));
 
@@ -44,28 +45,24 @@ const Mural = mongoose.model('Mural', new mongoose.Schema({
     titulo: String, autor: String, turma: String, createdAt: { type: Date, default: Date.now }
 }));
 
-// --- AUTH MIDDLEWARE ---
+// --- SECURITY MIDDLEWARE ---
 const authorize = (roles = []) => (req, res, next) => {
     try {
         const token = req.headers.authorization;
-        if (!token) return res.status(401).json({ msg: "Sem Token" });
-        // Standardizing token verification
+        if (!token) return res.status(401).json({ msg: "Acesso Negado" });
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (roles.length && !roles.includes(decoded.role)) {
-            console.log(`Access Denied for role: ${decoded.role}`);
-            return res.status(403).json({ msg: "Acesso Negado" });
-        }
+        if (roles.length && !roles.includes(decoded.role)) return res.status(403).json({ msg: "Permissão Insuficiente" });
         req.user = decoded;
         next();
-    } catch (e) { res.status(401).json({ msg: "Token Inválido" }); }
+    } catch (e) { res.status(401).json({ msg: "Sessão Expirada" }); }
 };
 
-// --- API ROUTES ---
+// --- AUTH ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { nome, email, senha, turma, role } = req.body;
+        const { nome, email, senha, turma } = req.body;
         const hashed = await bcrypt.hash(senha, 10);
-        await User.create({ nome, email, senha: hashed, turma, role: role || 'aluno' });
+        await User.create({ nome, email, senha: hashed, turma, role: 'aluno' });
         res.status(201).json({ msg: "Sucesso" });
     } catch (e) { res.status(400).json({ msg: "Erro no registro" }); }
 });
@@ -77,10 +74,11 @@ app.post('/api/auth/login', async (req, res) => {
         if (user && await bcrypt.compare(senha, user.senha)) {
             const token = jwt.sign({ id: user._id, role: user.role, nome: user.nome, turma: user.turma }, process.env.JWT_SECRET);
             res.json({ token, role: user.role, nome: user.nome, turma: user.turma, avatar: user.avatar });
-        } else res.status(401).json({ msg: "Erro" });
-    } catch (e) { res.status(500).json({ msg: "Erro Interno" }); }
+        } else res.status(401).json({ msg: "Credenciais Inválidas" });
+    } catch (e) { res.status(500).json({ msg: "Erro no Servidor" }); }
 });
 
+// --- CORE ROUTES ---
 app.get('/api/mural', authorize(), async (req, res) => res.json(await Mural.find({ turma: req.user.turma }).sort({ createdAt: -1 })));
 app.post('/api/mural', authorize(['professor', 'direcao']), async (req, res) => {
     const post = await Mural.create({ titulo: req.body.titulo, autor: req.user.nome, turma: req.user.turma });
@@ -111,5 +109,7 @@ app.get('/api/me/grades', authorize(), async (req, res) => {
     res.json(user.grades || []);
 });
 
+// Wildcard Catch-all (Must be last)
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Live` ));
+
+app.listen(PORT, '0.0.0.0', () => console.log(`Vertex Live on Port ${PORT}`));
