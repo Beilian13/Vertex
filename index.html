@@ -6,62 +6,20 @@
     <title>Vertex | Blue Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg: #010409; 
-            --surface: rgba(15, 20, 30, 0.8); 
-            --primary: #0070ff;
-            --grad: linear-gradient(135deg, #0070ff 0%, #7000ff 100%);
-            --text: #ffffff; 
-            --dim: #94a3b8;
-            --danger: #ff3366;
-            --border: rgba(255, 255, 255, 0.08);
-        }
+        :root { --bg: #010409; --surface: rgba(15, 20, 30, 0.8); --primary: #0070ff; --grad: linear-gradient(135deg, #0070ff 0%, #7000ff 100%); --text: #ffffff; --dim: #94a3b8; --danger: #ff3366; --border: rgba(255, 255, 255, 0.08); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { 
-            background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; 
-            margin: 0; padding-bottom: 90px; overflow-x: hidden;
-            background-image: radial-gradient(circle at 50% 0%, #0d1b3a 0%, #010409 60%);
-            min-height: 100vh;
-        }
-
-        .glass { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; }
-        .btn { 
-            background: var(--grad); color: white; border: none; padding: 16px; border-radius: 16px; 
-            font-weight: 800; width: 100%; box-shadow: 0 10px 25px rgba(0, 112, 255, 0.2);
-            transition: 0.3s;
-        }
+        body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; background-image: radial-gradient(circle at 50% 0%, #0d1b3a 0%, #010409 60%); min-height: 100vh; }
+        .glass { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
+        .btn { background: var(--grad); color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 800; width: 100%; transition: 0.3s; cursor: pointer; }
         .btn:active { transform: scale(0.96); }
-
-        input, textarea, select { 
-            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; 
-            padding: 16px; border-radius: 14px; width: 100%; margin-bottom: 12px; font-size: 15px;
-        }
-
-        /* TUTORIAL OVERLAY */
-        #tutorial-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999;
-            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;
-        }
-
+        input, textarea, select { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; padding: 16px; border-radius: 14px; width: 100%; margin-bottom: 12px; }
+        #tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
         .view { display: none; padding: 25px; animation: fadeInUp 0.4s ease; }
         .view.active { display: block; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        nav { 
-            position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 15, 25, 0.95); 
-            display: flex; justify-content: space-around; padding: 15px; border-radius: 30px; border: 1px solid var(--border); z-index: 1000;
-        }
-        .nav-item { color: var(--dim); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
+        nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 15, 25, 0.95); display: flex; justify-content: space-around; padding: 15px; border-radius: 30px; border: 1px solid var(--border); z-index: 1000; }
+        .nav-item { color: var(--dim); font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .nav-item.active { color: #fff; text-shadow: 0 0 15px var(--primary); }
-
-        .card { padding: 20px; margin-bottom: 15px; }
-        .quote-card { 
-            background: rgba(255,255,255,0.03); border-radius: 16px; padding: 15px; 
-            font-style: italic; font-size: 13px; color: #fff; margin-bottom: 20px; 
-            border-left: 3px solid var(--primary); 
-        }
-
-        #auth-page { height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 40px; }
         .logo-text { font-size: 45px; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; letter-spacing: -2px; }
     </style>
 </head>
@@ -69,249 +27,155 @@
 
     <div id="tutorial-overlay">
         <div class="logo-text">VERTEX</div>
-        <h2 id="tut-title" style="margin-top:20px;">Bem-vindo ao Futuro</h2>
-        <p id="tut-desc" style="color: var(--dim); line-height: 1.6; max-width: 300px;"></p>
-        <button class="btn" id="tut-btn" onclick="nextStep()" style="width: 200px; margin-top: 30px;">PRÓXIMO</button>
+        <h2 id="tut-title">Bem-vindo ao Futuro</h2>
+        <p id="tut-desc" style="color:var(--dim)"></p>
+        <button class="btn" onclick="nextStep()" style="width:200px">PRÓXIMO</button>
     </div>
 
-    <div id="auth-page">
-    <div style="text-align: center; margin-bottom: 30px;">
+    <div id="auth-page" style="height:100vh; display:flex; flex-direction:column; justify-content:center; padding:40px;">
         <div class="logo-text">VERTEX</div>
-        <p style="color: var(--dim); font-size: 12px; font-weight: 600; margin-top: 10px;">8th GRADE FOUNDER EDITION</p>
+        <div class="glass" style="margin-top:30px">
+            <h3 id="auth-title" style="text-align:center; color:var(--primary)">LOGIN</h3>
+            <input type="text" id="reg-nome" placeholder="Nome Completo" style="display:none">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="senha" placeholder="Senha">
+            <button class="btn" onclick="handleAuth()">ENTRAR NO SISTEMA</button>
+            <p style="text-align:center; font-size:12px; margin-top:20px; color:var(--dim)">
+                <span id="auth-switch-text">Não tem conta?</span> <a href="#" onclick="toggleAuthMode()" id="auth-link" style="color:var(--primary); font-weight:800">Criar agora</a>
+            </p>
+        </div>
     </div>
-    
-    <div class="glass card">
-        <div id="auth-title" style="font-weight: 800; margin-bottom: 20px; text-align: center; color: var(--primary);">LOGIN</div>
-        
-        <input type="text" id="reg-nome" placeholder="Seu Nome Completo" style="display:none;">
-        
-        <input type="email" id="email" placeholder="Email Institucional">
-        <input type="password" id="senha" placeholder="Senha">
-        
-        <button class="btn" id="auth-main-btn" onclick="handleAuth()">ENTRAR NO SISTEMA</button>
-        
-        <p style="text-align: center; font-size: 12px; margin-top: 20px; color: var(--dim);">
-            <span id="auth-switch-text">Não tem uma conta?</span> 
-            <a href="#" onclick="toggleAuthMode()" id="auth-link" style="color: var(--primary); font-weight: 800; text-decoration: none;">Criar agora</a>
-        </p>
-    </div>
-</div>
 
-    <div id="app-shell" style="display:none;">
-        <header style="padding: 30px 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img id="user-avatar" style="width:48px; height:48px; border-radius:16px; border: 2px solid var(--primary);">
-                <div>
-                    <div id="user-name-label" style="font-weight:800; font-size:18px;"></div>
-                    <div id="user-role-label" style="font-size:10px; color: var(--primary); font-weight: 800; text-transform: uppercase;"></div>
-                </div>
+    <div id="app-shell" style="display:none">
+        <header style="padding:30px 25px; display:flex; align-items:center; gap:12px">
+            <img id="user-avatar" style="width:48px; border-radius:16px; border:2px solid var(--primary)">
+            <div>
+                <div id="user-name-label" style="font-weight:800"></div>
+                <div id="user-role-label" style="font-size:10px; color:var(--primary); font-weight:800"></div>
             </div>
         </header>
 
         <div id="view-home" class="view active">
-            <div class="quote-card" id="random-quote"></div>
-            <h3 style="font-weight: 800; margin-bottom: 20px;">Notícias Oficiais</h3>
-            <div id="noticias-list"></div>
+            <div class="glass" id="random-quote" style="font-style:italic; font-size:13px; border-left:3px solid var(--primary)"></div>
+            <h3>Notícias</h3><div id="noticias-list"></div>
         </div>
 
         <div id="view-atividades" class="view">
-            <h3 style="font-weight: 800; margin-bottom: 20px;">Atividades & Tarefas</h3>
-            <div id="atividades-list"></div>
+            <h3>Tarefas</h3><div id="atividades-list"></div>
+            <div id="adm-atv-box" class="glass" style="display:none">
+                <h4>Nova Tarefa</h4>
+                <input id="atv-t" placeholder="Título"><input id="atv-m" placeholder="Matéria"><input type="date" id="atv-d">
+                <button class="btn" onclick="postarAtv()">LANÇAR</button>
+            </div>
         </div>
 
         <div id="view-ocorrencias" class="view">
-            <h3 style="font-weight: 800; margin-bottom: 20px;">Sistema Disciplinar</h3>
-            <div id="ocorrencias-list"></div>
+            <h3>Justiça</h3><div id="ocorrencias-list"></div>
+            <div id="adm-oc-box" class="glass" style="display:none">
+                <h4>Nova Ocorrência</h4>
+                <input id="oc-n" placeholder="Nome do Aluno"><textarea id="oc-d" placeholder="Descrição"></textarea>
+                <select id="oc-t"><option value="Ocorrencia">Ocorrência</option><option value="Advertencia">Advertência</option></select>
+                <button class="btn" onclick="postarOc()">REGISTRAR</button>
+            </div>
         </div>
 
-        <div id="view-forum" class="view">
-            <h3 style="font-weight: 800; margin-bottom: 20px;">Fórum da Turma</h3>
-            <div id="forum-container"></div>
+        <div id="view-admin" class="view">
+            <h3 style="color:gold">MASTER CONTROL</h3>
+            <div class="glass" style="border:1px solid gold">
+                <h4>Gerenciar Usuários</h4>
+                <div id="admin-users-list"></div>
+                <div id="reset-box" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:10px">
+                    <input id="reset-id" disabled style="opacity:0.5; font-size:10px">
+                    <input id="new-pw" placeholder="Nova Senha">
+                    <button class="btn" onclick="confirmReset()">RESETAR SENHA</button>
+                </div>
+            </div>
         </div>
 
         <nav>
             <div class="nav-item active" onclick="switchView('home')">Início</div>
             <div class="nav-item" onclick="switchView('atividades')">Tarefas</div>
             <div class="nav-item" onclick="switchView('ocorrencias')">Justiça</div>
-            <div class="nav-item" onclick="switchView('forum')">Fórum</div>
-            <div class="nav-item" onclick="logout()" style="color:var(--danger);">Sair</div>
+            <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none; color:gold">Master</div>
+            <div class="nav-item" onclick="logout()" style="color:var(--danger)">Sair</div>
         </nav>
     </div>
 
     <script>
-        const quotes = [
-            "\"Eu criei o Vertex no 8º ano. Se eu consegui codar isso, você consegue dominar qualquer matéria.\"",
-            "\"O código não mente, e o seu esforço também não. Estude como um desenvolvedor.\"",
-            "\"Grandes sistemas começam com uma linha de código. Grandes futuros começam com uma hora de estudo.\"",
-            "\"Vertex: Onde a tecnologia do 8º ano encontra a organização profissional.\""
-        ];
-
-        let tutStep = 0;
-        const tutContent = [
-            { t: "Bem-vindo ao Vertex", d: "Criado por Beilian, este sistema foi feito por um aluno do 8º ano para alunos que buscam o topo." },
-            { t: "Notícias em Tempo Real", d: "Fique por dentro de tudo o que acontece na escola sem precisar de murais físicos." },
-            { t: "Gestão de Atividades", d: "Acompanhe prazos e entregas com uma interface limpa e intuitiva." },
-            { t: "Sistema de Justiça", d: "Ocorrências e Advertências são monitoradas aqui. Mantenha sua conduta exemplar!" }
-        ];
-
-        const api = async (url, method = 'GET', body = null) => {
-            const token = localStorage.getItem('v-token');
-            const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': token || '' } };
-            if (body) opts.body = JSON.stringify(body);
-            const res = await fetch(url, opts);
-            return res.ok ? await res.json() : null;
+        const api = async (u, m='GET', b=null) => {
+            const r = await fetch(u, { method: m, headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('v-token') || '' }, body: b ? JSON.stringify(b) : null });
+            return r.ok ? await r.json() : null;
         };
 
-        function nextStep() {
-            tutStep++;
-            if (tutStep >= tutContent.length) {
-                document.getElementById('tutorial-overlay').style.display = 'none';
-                localStorage.setItem('v-tutorial', 'done');
-                return;
-            }
-            document.getElementById('tut-title').innerText = tutContent[tutStep].t;
-            document.getElementById('tut-desc').innerText = tutContent[tutStep].d;
+        let isLogin = true;
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            document.getElementById('reg-nome').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('auth-title').innerText = isLogin ? 'LOGIN' : 'CRIAR CONTA';
         }
 
-       let isLoginMode = true;
-
-function toggleAuthMode() {
-    isLoginMode = !isLoginMode;
-    const nomeInput = document.getElementById('reg-nome');
-    const title = document.getElementById('auth-title');
-    const btn = document.getElementById('auth-main-btn');
-    const link = document.getElementById('auth-link');
-    const switchText = document.getElementById('auth-switch-text');
-
-    if (!isLoginMode) {
-        nomeInput.style.display = 'block';
-        title.innerText = "CRIAR CONTA";
-        btn.innerText = "REGISTRAR AGORA";
-        link.innerText = "Fazer Login";
-        switchText.innerText = "Já tem conta?";
-    } else {
-        nomeInput.style.display = 'none';
-        title.innerText = "LOGIN";
-        btn.innerText = "ENTRAR NO SISTEMA";
-        link.innerText = "Criar agora";
-        switchText.innerText = "Não tem uma conta?";
-    }
-}
-
-async function handleAuth() {
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-    const nome = document.getElementById('reg-nome').value;
-
-    const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
-    const body = isLoginMode ? { email, senha } : { nome, email, senha, role: 'admin' }; // O primeiro que você criar bota como admin!
-
-    const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-        if (isLoginMode) {
-            localStorage.setItem('v-token', data.token);
-            localStorage.setItem('v-user', JSON.stringify(data));
-            initApp(data);
-        } else {
-            alert("Conta criada! Agora faça o login.");
-            toggleAuthMode();
+        async function handleAuth() {
+            const body = { email: email.value, senha: senha.value, nome: document.getElementById('reg-nome').value };
+            const r = await api(isLogin ? '/api/auth/login' : '/api/auth/register', 'POST', body);
+            if(r) { 
+                if(isLogin) { localStorage.setItem('v-token', r.token); localStorage.setItem('v-user', JSON.stringify(r)); location.reload(); }
+                else { alert("Conta criada!"); toggleAuthMode(); }
+            } else alert("Erro na autenticação.");
         }
-    } else {
-        alert(data.msg);
-    }
-}
+
         function initApp(u) {
             document.getElementById('auth-page').style.display = 'none';
             document.getElementById('app-shell').style.display = 'block';
             document.getElementById('user-avatar').src = u.avatar;
             document.getElementById('user-name-label').innerText = u.nome;
             document.getElementById('user-role-label').innerText = u.role;
-            document.getElementById('random-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)];
-
-            if (!localStorage.getItem('v-tutorial')) {
-                document.getElementById('tutorial-overlay').style.display = 'flex';
-                nextStep(); // Load first step
-                tutStep = 0; 
-            }
+            if(u.role === 'Admin') document.getElementById('nav-admin').style.display = 'block';
+            if(['Professor', 'Admin'].includes(u.role)) document.getElementById('adm-atv-box').style.display = 'block';
+            if(['Direcao', 'Admin'].includes(u.role)) document.getElementById('adm-oc-box').style.display = 'block';
             switchView('home');
         }
 
-        function switchView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
-            
-            const navItems = document.querySelectorAll('.nav-item');
-            if(id === 'home') { navItems[0].classList.add('active'); loadNoticias(); }
-            if(id === 'atividades') { navItems[1].classList.add('active'); loadAtividades(); }
-            if(id === 'ocorrencias') { navItems[2].classList.add('active'); loadOcorrencias(); }
-            if(id === 'forum') { navItems[3].classList.add('active'); loadForum(); }
+        function switchView(v) {
+            document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            if(v === 'home') loadNoticias();
+            if(v === 'atividades') loadAtividades();
+            if(v === 'ocorrencias') loadOcorrencias();
+            if(v === 'admin') loadUsers();
         }
 
         async function loadNoticias() {
-            const data = await api('/api/noticias');
-            if (data) document.getElementById('noticias-list').innerHTML = data.map(n => `
-                <div class="glass card">
-                    <div style="font-weight:800; color:var(--primary); font-size:10px; margin-bottom:5px; text-transform:uppercase;">Informativo</div>
-                    <div style="font-weight:600;">${n.titulo}</div>
-                    <div style="font-size:11px; color:var(--dim); margin-top:8px;">Postado por ${n.autor}</div>
-                </div>
-            `).join('');
+            const d = await api('/api/noticias');
+            if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `<div class="glass"><b>${n.titulo}</b><br><small>${n.autor}</small></div>`).join('');
         }
 
         async function loadAtividades() {
-            const data = await api('/api/atividades');
-            if (data) document.getElementById('atividades-list').innerHTML = data.map(a => `
-                <div class="glass card" style="border-left: 4px solid var(--primary);">
-                    <div style="font-size:10px; font-weight:800; color:var(--primary); margin-bottom:5px;">${a.materia.toUpperCase()}</div>
-                    <div style="font-weight:700;">${a.titulo}</div>
-                    <div style="font-size:12px; color:var(--dim); margin-top:10px;">📅 Entrega: ${new Date(a.dataEntrega).toLocaleDateString()}</div>
-                </div>
-            `).join('');
+            const d = await api('/api/atividades');
+            if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass" style="border-left:4px solid var(--primary)"><b>${a.materia}</b>: ${a.titulo}<br><small>📅 ${new Date(a.dataEntrega).toLocaleDateString()}</small></div>`).join('');
         }
 
         async function loadOcorrencias() {
-            const data = await api('/api/ocorrencias');
-            if (data) document.getElementById('ocorrencias-list').innerHTML = data.map(o => `
-                <div class="glass card" style="border-left: 4px solid ${o.tipo === 'Advertencia' ? 'var(--danger)' : '#ffaa00'}">
-                    <div style="font-weight:800; color:${o.tipo === 'Advertencia' ? 'var(--danger)' : '#ffaa00'}; font-size:11px; text-transform:uppercase;">${o.tipo}</div>
-                    <div style="font-weight:700; margin:5px 0;">${o.alunoNome}</div>
-                    <div style="font-size:13px; opacity:0.8;">${o.descricao}</div>
-                    <div style="margin-top:15px; font-size:10px; font-weight:800; text-transform:uppercase; color:var(--dim);">Status: ${o.status || 'Em Processo'}</div>
-                </div>
-            `).join('');
+            const d = await api('/api/ocorrencias');
+            if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid ${o.tipo==='Advertencia'?'var(--danger)':'gold'}"><b>${o.alunoNome}</b> - ${o.tipo}<br><p>${o.descricao}</p></div>`).join('');
         }
 
-        async function loadForum() {
-            const data = await api('/api/forum');
-            if (data) document.getElementById('forum-container').innerHTML = data.map(t => `
-                <div class="glass card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:600;">${t.titulo}</div>
-                        <div style="font-size:11px; color:var(--dim);">Por ${t.autor}</div>
-                    </div>
-                    <button onclick="reportBullying('${t._id}')" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:6px 12px; border-radius:10px; font-size:10px; font-weight:800;">REPORTAR</button>
-                </div>
-            `).join('');
+        async function loadUsers() {
+            const d = await api('/api/admin/users');
+            if(d) document.getElementById('admin-users-list').innerHTML = d.map(u => `<div style="display:flex; justify-content:space-between; margin-bottom:10px"><span>${u.nome} (${u.role})</span> <button onclick="openReset('${u._id}')">RESET</button></div>`).join('');
         }
 
-        async function reportBullying(id) {
-            if (confirm("Deseja reportar bullying? O sistema de justiça analisará este tópico.")) {
-                await api(`/api/forum/report/${id}`, 'POST');
-                alert("Reporte enviado com sucesso.");
-                loadForum();
-            }
+        function openReset(id) { document.getElementById('reset-box').style.display='block'; document.getElementById('reset-id').value=id; }
+        async function confirmReset() {
+            await api('/api/admin/reset-password', 'POST', { userId: document.getElementById('reset-id').value, novaSenha: document.getElementById('new-pw').value });
+            alert("Senha alterada!");
         }
+
+        async function postarAtv() { await api('/api/atividades', 'POST', { titulo: document.getElementById('atv-t').value, materia: document.getElementById('atv-m').value, dataEntrega: document.getElementById('atv-d').value }); location.reload(); }
+        async function postarOc() { await api('/api/ocorrencias', 'POST', { alunoNome: document.getElementById('oc-n').value, descricao: document.getElementById('oc-d').value, tipo: document.getElementById('oc-t').value }); location.reload(); }
 
         function logout() { localStorage.clear(); location.reload(); }
-        window.onload = () => { const u = localStorage.getItem('v-user'); if (u) initApp(JSON.parse(u)); };
+        window.onload = () => { const u = localStorage.getItem('v-user'); if(u) initApp(JSON.parse(u)); };
     </script>
 </body>
 </html>
