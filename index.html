@@ -3,73 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertex | Mobile</title>
+    <title>Vertex | Professional</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg: #000000; 
-            --surface: #0a0c10; 
-            --accent: #0070ff; 
-            --accent-glow: rgba(0, 112, 255, 0.3);
-            --border: #1a1d23;
-            --text: #f0f2f5; 
-            --text-dim: #8e95a2;
+            --bg: #020408; 
+            --surface: rgba(13, 17, 23, 0.7); 
+            --primary-grad: linear-gradient(135deg, #0062ff 0%, #6100ff 100%);
+            --accent: #0084ff; 
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff; 
+            --text-dim: #94a3b8;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { 
             background: var(--bg); color: var(--text); 
-            font-family: 'Outfit', sans-serif; margin: 0; padding-bottom: 80px; 
-            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; 
+            background-image: radial-gradient(circle at 50% 0%, #101a30 0%, #020408 50%);
+            min-height: 100vh;
         }
 
         /* PREMIUM COMPONENTS */
         .glass { 
             background: var(--surface); 
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border); 
-            border-radius: 16px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border-radius: 20px; 
         }
         .btn { 
-            background: var(--accent); color: white; border: none; 
-            padding: 14px 20px; border-radius: 12px; cursor: pointer; 
-            font-weight: 600; width: 100%; transition: 0.2s;
-            box-shadow: 0 0 15px var(--accent-glow);
+            background: var(--primary-grad); color: white; border: none; 
+            padding: 16px; border-radius: 14px; cursor: pointer; 
+            font-weight: 700; width: 100%; font-size: 15px;
+            box-shadow: 0 8px 20px rgba(0, 98, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn:active { transform: scale(0.97); opacity: 0.8; }
+        .btn:active { transform: scale(0.96); filter: brightness(1.2); }
 
         input, textarea { 
-            background: #0d1117; border: 1px solid var(--border); 
-            color: #fff; padding: 16px; border-radius: 12px; 
-            width: 100%; margin-bottom: 12px; font-size: 16px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); 
+            color: #fff; padding: 16px; border-radius: 14px; 
+            width: 100%; margin-bottom: 14px; font-size: 16px;
+            transition: border 0.3s;
         }
+        input:focus { border-color: var(--accent); }
 
-        /* MOBILE NAVIGATION */
+        /* NAVIGATION BAR */
         nav { 
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(10, 12, 16, 0.95); 
-            backdrop-filter: blur(10px);
+            position: fixed; bottom: 15px; left: 15px; right: 15px;
+            background: rgba(13, 17, 23, 0.85); 
+            backdrop-filter: blur(20px);
             display: flex; justify-content: space-around; 
-            padding: 15px 10px; border-top: 1px solid var(--border);
+            padding: 12px; border-radius: 24px;
+            border: 1px solid var(--border);
             z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
         }
         .nav-item { 
-            text-align: center; color: var(--text-dim); font-size: 11px; 
-            text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-dim); font-size: 10px; font-weight: 600;
+            transition: 0.3s;
         }
-        .nav-item.active { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+        .nav-item.active { color: #fff; }
+        .nav-item.active::after {
+            content: ''; width: 4px; height: 4px; background: var(--accent);
+            border-radius: 50%; margin-top: 4px; box-shadow: 0 0 10px var(--accent);
+        }
 
-        /* VIEWS */
-        .view { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        /* DASHBOARD ELEMENTS */
+        .view { display: none; padding: 20px; animation: slideIn 0.4s ease-out; }
         .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        header { padding: 20px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-        .card { padding: 20px; margin-bottom: 15px; }
-        .materia-badge { 
-            display: inline-block; background: var(--accent-glow); 
-            color: var(--accent); padding: 4px 10px; 
-            border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 8px;
+        header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .card { padding: 20px; margin-bottom: 16px; }
+        .badge { 
+            background: var(--primary-grad); font-size: 10px; padding: 4px 10px;
+            border-radius: 8px; font-weight: 800; text-transform: uppercase;
         }
 
         /* AUTH SCREEN */
@@ -77,62 +87,72 @@
             height: 100vh; display: flex; flex-direction: column; 
             justify-content: center; padding: 30px;
         }
-        .logo { font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: -1px; text-align: center; margin-bottom: 40px; }
+        .logo-text { 
+            font-size: 42px; font-weight: 900; letter-spacing: -2px; 
+            background: var(--primary-grad); -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div id="auth-page">
-        <div class="logo">VERTEX</div>
-        <div class="glass card" style="border: none;">
+        <div class="logo-text">VERTEX</div>
+        <p style="text-align:center; color:var(--text-dim); margin-top:0; margin-bottom:40px; font-size:14px;">Academic Management System</p>
+        <div class="glass card">
             <div id="reg-fields" style="display:none;">
                 <input type="text" id="reg-nome" placeholder="Nome Completo">
-                <input type="text" id="reg-turma" placeholder="Turma (ex: 801)">
+                <input type="text" id="reg-turma" placeholder="Ex: 9º Ano B">
             </div>
-            <input type="email" id="email" placeholder="Email institucional">
+            <input type="email" id="email" placeholder="Email">
             <input type="password" id="senha" placeholder="Senha">
-            <button class="btn" onclick="handleAuth()">Acessar Sistema</button>
-            <p onclick="toggleAuth()" style="text-align:center; color:var(--text-dim); font-size:13px; margin-top:20px;">Alternar Login/Registro</p>
+            <button class="btn" onclick="handleAuth()">Acessar Plataforma</button>
+            <p onclick="toggleAuth()" style="text-align:center; color:var(--text-dim); font-size:12px; margin-top:20px; text-decoration:underline;">Trocar para Cadastro / Login</p>
         </div>
     </div>
 
     <div id="app-shell" style="display:none;">
         <header>
             <div style="display:flex; align-items:center; gap:12px;">
-                <img id="user-avatar" src="" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--accent);">
+                <img id="user-avatar" style="width:44px; height:44px; border-radius:15px; border:1px solid var(--border);">
                 <div>
-                    <div id="user-name-label" style="font-weight:600; font-size:16px;"></div>
-                    <div id="user-role-label" style="font-size:11px; color:var(--text-dim);"></div>
+                    <div id="user-name-label" style="font-weight:700; font-size:16px;"></div>
+                    <div id="user-role-label" style="font-size:11px; color:var(--text-dim); letter-spacing:0.5px;"></div>
                 </div>
             </div>
+            <div class="badge" id="turma-badge"></div>
         </header>
 
         <div id="view-home" class="view active">
-            <div id="prof-post-area" style="display:none; margin-bottom:25px;">
-                <h4 style="margin: 0 0 10px 0;">Novo Aviso</h4>
-                <input type="text" id="m-tit" placeholder="Digite seu comunicado...">
-                <button class="btn" onclick="postToMural()">Publicar no Mural</button>
+            <div id="prof-post-area" style="display:none; margin-bottom:30px;">
+                <div class="glass card" style="border: 1px solid rgba(0, 98, 255, 0.3);">
+                    <input type="text" id="m-tit" placeholder="Anunciar algo para a turma...">
+                    <button class="btn" onclick="postToMural()">Publicar Aviso</button>
+                </div>
             </div>
-            <h3 style="margin-bottom:20px;">Mural Digital</h3>
+            <h3 style="margin-left:5px;">Mural de Avisos</h3>
             <div id="mural-list"></div>
         </div>
 
         <div id="view-homeworks" class="view">
-            <button class="btn" id="btn-new-hw" style="display:none; margin-bottom:20px;" onclick="toggleHwForm()">+ Nova Atividade</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">Atividades</h3>
+                <button class="btn" id="btn-new-hw" style="display:none; width:auto; padding:8px 15px; font-size:12px;" onclick="toggleHwForm()">+ Criar</button>
+            </div>
             <div id="hw-form" class="glass card" style="display:none;">
                 <input type="text" id="h-mat" placeholder="Matéria">
-                <input type="text" id="h-tit" placeholder="Título">
-                <textarea id="h-desc" placeholder="Descrição da tarefa"></textarea>
+                <input type="text" id="h-tit" placeholder="Título da Atividade">
+                <textarea id="h-desc" placeholder="Instruções..."></textarea>
                 <input type="date" id="h-date">
-                <button class="btn" onclick="postHomework()">Lançar Atividade</button>
+                <button class="btn" onclick="postHomework()">Enviar para Turma</button>
             </div>
             <div id="hw-list"></div>
         </div>
 
         <div id="view-grades" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0;">Boletim</h3>
-                <button onclick="generatePDF()" style="background:none; border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:8px; font-size:12px;">PDF</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <h3 style="margin:0;">Notas e Faltas</h3>
+                <button onclick="generatePDF()" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; padding:10px 16px; border-radius:12px; font-size:12px;">Exportar PDF</button>
             </div>
             <div id="grades-container"></div>
         </div>
@@ -140,29 +160,29 @@
         <div id="view-forum" class="view">
             <div id="forum-list-view">
                 <div class="glass card">
-                    <input type="text" id="f-tit" placeholder="Título da dúvida">
-                    <textarea id="f-con" placeholder="Explique seu ponto..."></textarea>
-                    <button class="btn" onclick="postThread()">Iniciar Discussão</button>
+                    <input type="text" id="f-tit" placeholder="Assunto do tópico">
+                    <textarea id="f-con" placeholder="Escreva sua dúvida ou sugestão..."></textarea>
+                    <button class="btn" onclick="postThread()">Iniciar Tópico</button>
                 </div>
-                <div id="forum-container" style="margin-top:20px;"></div>
+                <div id="forum-container" style="margin-top:25px;"></div>
             </div>
             <div id="thread-view" style="display:none;">
-                <span onclick="closeThread()" style="color:var(--accent); font-weight:600; cursor:pointer;">← Voltar</span>
-                <div id="thread-content" style="margin:25px 0;"></div>
+                <div onclick="closeThread()" style="color:var(--accent); font-weight:600; margin-bottom:20px; display:flex; align-items:center; gap:5px;"><span>←</span> Voltar ao Fórum</div>
+                <div id="thread-content" class="glass card" style="background:none;"></div>
                 <div id="comment-tree"></div>
-                <div style="margin-top:30px;">
-                    <textarea id="main-reply" placeholder="Sua resposta..."></textarea>
-                    <button class="btn" onclick="postReply(null)">Enviar Resposta</button>
+                <div style="margin-top:20px;">
+                    <textarea id="main-reply" placeholder="Sua contribuição..."></textarea>
+                    <button class="btn" onclick="postReply(null)">Comentar</button>
                 </div>
             </div>
         </div>
 
         <nav>
-            <div class="nav-item active" onclick="switchView('home')">Mural</div>
-            <div class="nav-item" onclick="switchView('homeworks')">Atividades</div>
-            <div class="nav-item" onclick="switchView('grades')">Boletim</div>
-            <div class="nav-item" onclick="switchView('forum')">Fórum</div>
-            <div class="nav-item" onclick="logout()">Sair</div>
+            <div class="nav-item active" onclick="switchView('home')">MURAL</div>
+            <div class="nav-item" onclick="switchView('homeworks')">TAREFAS</div>
+            <div class="nav-item" onclick="switchView('grades')">NOTAS</div>
+            <div class="nav-item" onclick="switchView('forum')">FÓRUM</div>
+            <div class="nav-item" onclick="logout()" style="color:#ff4d4d;">SAIR</div>
         </nav>
     </div>
 
@@ -178,7 +198,6 @@
             if (body) opts.body = JSON.stringify(body);
             try {
                 const res = await fetch(url, opts);
-                if (res.status === 403) { alert("Permissão negada."); return null; }
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch (e) { return null; }
@@ -189,13 +208,9 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
             
-            // Find nav item by text content and highlight
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                if(item.innerText.toLowerCase().includes(id.replace('home','mural').replace('homeworks','atividades').toLowerCase())) {
-                    item.classList.add('active');
-                }
-            });
+            const navs = document.querySelectorAll('.nav-item');
+            const indexMap = { 'home': 0, 'homeworks': 1, 'grades': 2, 'forum': 3 };
+            navs[indexMap[id]].classList.add('active');
 
             if (id === 'home') loadMural();
             if (id === 'homeworks') loadHWs();
@@ -226,8 +241,8 @@
                     localStorage.setItem('v-token', data.token);
                     localStorage.setItem('v-user', JSON.stringify(data));
                     initApp(data);
-                } else { alert("Registrado com sucesso!"); toggleAuth(); }
-            } else alert("Erro: Verifique seus dados.");
+                } else { alert("Conta criada!"); toggleAuth(); }
+            } else alert("Erro no acesso.");
         }
 
         function initApp(u) {
@@ -235,7 +250,8 @@
             document.getElementById('app-shell').style.display = 'block';
             document.getElementById('user-avatar').src = u.avatar;
             document.getElementById('user-name-label').innerText = u.nome;
-            document.getElementById('user-role-label').innerText = u.role.toUpperCase() + " • " + (u.turma || "GERAL");
+            document.getElementById('user-role-label').innerText = u.role.toUpperCase();
+            document.getElementById('turma-badge').innerText = u.turma || 'Geral';
             if (u.role !== 'aluno') {
                 document.getElementById('prof-post-area').style.display = 'block';
                 document.getElementById('btn-new-hw').style.display = 'block';
@@ -247,8 +263,11 @@
             const data = await api('/api/mural');
             if (data) document.getElementById('mural-list').innerHTML = data.map(p => `
                 <div class="glass card">
-                    <div style="font-weight:600; margin-bottom:5px;">${p.titulo}</div>
-                    <div style="color:var(--text-dim); font-size:12px;">${p.autor} • ${new Date(p.createdAt).toLocaleDateString()}</div>
+                    <div style="font-weight:600; margin-bottom:8px; line-height:1.4;">${p.titulo}</div>
+                    <div style="color:var(--text-dim); font-size:11px; display:flex; justify-content:space-between;">
+                        <span>${p.autor}</span>
+                        <span>${new Date(p.createdAt).toLocaleDateString()}</span>
+                    </div>
                 </div>`).join('');
         }
 
@@ -268,11 +287,11 @@
         async function loadHWs() {
             const data = await api('/api/homeworks');
             if (data) document.getElementById('hw-list').innerHTML = data.map(h => `
-                <div class="glass card" style="border-left: 4px solid var(--accent);">
-                    <span class="materia-badge">${h.materia.toUpperCase()}</span>
-                    <div style="font-weight:600; margin-bottom:8px;">${h.titulo}</div>
-                    <div style="font-size:13px; color:var(--text-dim);">${h.descricao}</div>
-                    <div style="margin-top:12px; font-size:11px; color:var(--accent);">ENTREGA: ${new Date(h.dataEntrega).toLocaleDateString()}</div>
+                <div class="glass card" style="border-left: 3px solid #0062ff;">
+                    <div style="color:var(--accent); font-size:10px; font-weight:800; margin-bottom:5px;">${h.materia.toUpperCase()}</div>
+                    <div style="font-weight:700; margin-bottom:8px;">${h.titulo}</div>
+                    <div style="font-size:13px; color:var(--text-dim); line-height:1.5;">${h.descricao}</div>
+                    <div style="margin-top:15px; font-size:11px; font-weight:600; opacity:0.8;">📅 Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</div>
                 </div>`).join('');
         }
 
@@ -291,21 +310,24 @@
             if (grades) document.getElementById('grades-container').innerHTML = grades.map(g => `
                 <div class="glass card" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight:600;">${g.materia}</div>
-                        <div style="font-size:12px; color:var(--text-dim);">AV1: ${g.av1} | AV2: ${g.av2}</div>
+                        <div style="font-weight:700;">${g.materia}</div>
+                        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">A1: ${g.av1} • A2: ${g.av2}</div>
                     </div>
-                    <div style="font-size:20px; font-weight:800; color:var(--accent);">${((g.av1+g.av2)/2).toFixed(1)}</div>
+                    <div style="font-size:22px; font-weight:900; background:var(--primary-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${((g.av1+g.av2)/2).toFixed(1)}</div>
                 </div>`).join('');
         }
 
-        function generatePDF() { html2pdf().from(document.getElementById('view-grades')).save('Vertex_Boletim.pdf'); }
+        function generatePDF() { html2pdf().from(document.getElementById('grades-container')).save('Vertex_Notas.pdf'); }
 
         async function loadForum() {
             const data = await api('/api/forum');
             if (data) document.getElementById('forum-container').innerHTML = data.map(t => `
-                <div class="glass card" onclick="openThread('${t._id}')">
-                    <div style="font-weight:600; margin-bottom:5px;">${t.titulo}</div>
-                    <div style="color:var(--text-dim); font-size:12px;">${t.autor} • ${t.replies.length} respostas</div>
+                <div class="glass card" onclick="openThread('${t._id}')" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600; margin-bottom:4px;">${t.titulo}</div>
+                        <div style="color:var(--text-dim); font-size:11px;">Iniciado por ${t.autor}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:8px; font-size:11px;">💬 ${t.replies.length}</div>
                 </div>`).join('');
         }
 
@@ -325,8 +347,8 @@
             document.getElementById('forum-list-view').style.display = 'none';
             document.getElementById('thread-view').style.display = 'block';
             document.getElementById('thread-content').innerHTML = `
-                <h2 style="margin:0 0 10px 0;">${t.titulo}</h2>
-                <p style="color:var(--text-dim); line-height:1.6;">${t.conteudo}</p>
+                <h2 style="margin:0 0 15px 0; font-size:20px;">${t.titulo}</h2>
+                <p style="color:var(--text-dim); line-height:1.6; font-size:14px;">${t.conteudo}</p>
             `;
             renderComments(t.replies);
         }
@@ -338,11 +360,11 @@
             replies.filter(r => r.parentId === (parentId ? parentId.toString() : null)).forEach(r => {
                 const div = document.createElement('div');
                 div.style.padding = '15px 0';
-                div.style.borderLeft = parentId ? '1px solid var(--border)' : 'none';
+                div.style.borderLeft = parentId ? '1px solid rgba(255,255,255,0.05)' : 'none';
                 div.style.paddingLeft = parentId ? '15px' : '0';
                 div.innerHTML = `
-                    <div style="font-size:12px; font-weight:600; color:var(--accent); margin-bottom:4px;">${r.autor}</div>
-                    <div style="font-size:14px; margin-bottom:10px;">${r.texto}</div>
+                    <div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px;">${r.autor}</div>
+                    <div style="font-size:14px; line-height:1.4; opacity:0.9;">${r.texto}</div>
                     <div id="replies-${r.id}"></div>
                 `;
                 container.appendChild(div);
