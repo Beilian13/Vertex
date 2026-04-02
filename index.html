@@ -133,113 +133,237 @@
     </div>
 
     <script>
-        let isLogin = true, currentThread = null;
-        const api = async (url, method='GET', body=null) => {
-            const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('v-token') } };
-            if(body) opts.body = JSON.stringify(body);
-            return await (await fetch(url, opts)).json();
+    let isLogin = true, currentThread = null;
+
+    const api = async (url, method = 'GET', body = null) => {
+        const token = localStorage.getItem('v-token');
+        const opts = { 
+            method, 
+            headers: { 
+                'Content-Type': 'application/json',
+                // Added check to ensure token exists before sending
+                'Authorization': token ? token : '' 
+            } 
         };
-
-        function notify(t) { const n = document.getElementById('notification'); n.innerText = t; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'), 3000); }
-        function toggleAuth() { isLogin = !isLogin; document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block'; }
-
-        async function handleAuth() {
-            const body = isLogin ? { email:email.value, senha:senha.value } : { email:email.value, senha:senha.value, nome:document.getElementById('reg-nome').value, turma:document.getElementById('reg-turma').value };
-            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-            if(res.ok) {
-                if(isLogin) {
-                    const data = await res.json();
-                    localStorage.setItem('v-token', data.token); localStorage.setItem('v-user', JSON.stringify(data));
-                    initApp(data);
-                } else { notify("Criado!"); toggleAuth(); }
-            }
-        }
-
-        function initApp(u) {
-            document.getElementById('auth-page').style.display = 'none';
-            document.getElementById('app-shell').style.display = 'block';
-            document.getElementById('user-avatar').src = u.avatar;
-            document.getElementById('user-name-label').innerText = u.nome;
-            if(u.role !== 'aluno') { document.getElementById('prof-post-area').style.display = 'block'; document.getElementById('btn-new-hw').style.display = 'block'; }
-            if(u.role === 'direcao') document.getElementById('nav-direcao').style.display = 'flex';
-            switchView('home');
-        }
-
-        function switchView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
-            if(id === 'home') loadMural();
-            if(id === 'homeworks') loadHWs();
-            if(id === 'forum') loadForum();
-            if(id === 'grades') loadGrades();
-        }
-
-        // --- NEW/FIXED FUNCTIONS ---
-        function toggleHwForm() { const f = document.getElementById('hw-form'); f.style.display = f.style.display==='none'?'block':'none'; }
-        function closeThread() { document.getElementById('forum-list-view').style.display='block'; document.getElementById('thread-view').style.display='none'; }
+        if (body) opts.body = JSON.stringify(body);
         
-        async function postToMural() {
-            await api('/api/mural', 'POST', { titulo: document.getElementById('m-tit').value });
-            loadMural(); document.getElementById('m-tit').value = ''; notify("Postado!");
+        const res = await fetch(url, opts);
+        // If 403 or 401, the token is likely dead
+        if (res.status === 403 || res.status === 401) {
+            console.error("Access Denied/Forbidden. Redirecting to login...");
+            // Optional: logout(); 
         }
+        return await res.json();
+    };
 
-        async function loadMural() {
-            const data = await api('/api/mural');
-            document.getElementById('mural-list').innerHTML = data.map(p => `<div class="glass" style="padding:15px;"><h4>${p.titulo}</h4><small>${p.autor}</small></div>`).join('');
+    function notify(t) { 
+        const n = document.getElementById('notification'); 
+        n.innerText = t; 
+        n.classList.add('show'); 
+        setTimeout(() => n.classList.remove('show'), 3000); 
+    }
+
+    function toggleAuth() { 
+        isLogin = !isLogin; 
+        document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block'; 
+        document.getElementById('auth-btn').innerText = isLogin ? 'Autenticar' : 'Finalizar Registro';
+    }
+
+    async function handleAuth() {
+        const emailVal = document.getElementById('email').value;
+        const senhaVal = document.getElementById('senha').value;
+        const body = isLogin ? { email: emailVal, senha: senhaVal } : { 
+            email: emailVal, 
+            senha: senhaVal, 
+            nome: document.getElementById('reg-nome').value, 
+            turma: document.getElementById('reg-turma').value 
+        };
+        
+        const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(body) 
+        });
+
+        if (res.ok) {
+            if (isLogin) {
+                const data = await res.json();
+                localStorage.setItem('v-token', data.token); 
+                localStorage.setItem('v-user', JSON.stringify(data));
+                initApp(data);
+            } else { 
+                notify("Conta Criada!"); 
+                toggleAuth(); 
+            }
+        } else {
+            alert("Erro na autenticação.");
         }
+    }
 
-        async function postHomework() {
-            const body = { titulo: document.getElementById('h-tit').value, materia: document.getElementById('h-mat').value, descricao: document.getElementById('h-desc').value, dataEntrega: document.getElementById('h-date').value };
-            await api('/api/homeworks', 'POST', body);
-            toggleHwForm(); loadHWs(); notify("Lançado!");
+    function initApp(u) {
+        document.getElementById('auth-page').style.display = 'none';
+        document.getElementById('app-shell').style.display = 'block';
+        document.getElementById('user-avatar').src = u.avatar;
+        document.getElementById('user-name-label').innerText = u.nome;
+        document.getElementById('user-role-label').innerText = u.role.toUpperCase();
+
+        if (u.role !== 'aluno') { 
+            document.getElementById('prof-post-area').style.display = 'block'; 
+            document.getElementById('btn-new-hw').style.display = 'block'; 
         }
+        if (u.role === 'direcao') document.getElementById('nav-direcao').style.display = 'flex';
+        switchView('home');
+    }
 
-        async function loadHWs() {
-            const data = await api('/api/homeworks');
-            document.getElementById('hw-list').innerHTML = data.map(h => `<div class="glass" style="border-left:4px solid gold; padding:15px;"><b>${h.materia}</b>: ${h.titulo}</div>`).join('');
-        }
+    function switchView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById('view-' + id);
+        if (target) target.classList.add('active');
 
-        async function loadForum() {
-            const data = await api('/api/forum');
-            document.getElementById('forum-container').innerHTML = data.map(t => `<div class="glass" style="padding:15px; margin-top:10px; cursor:pointer;" onclick="openThread('${t._id}')">${t.titulo}</div>`).join('');
-        }
+        if (id === 'home') loadMural();
+        if (id === 'homeworks') loadHWs();
+        if (id === 'forum') loadForum();
+        if (id === 'grades') loadGrades();
+        if (id === 'direcao') loadDirecao();
+    }
 
-        async function openThread(id) {
-            const t = await api(`/api/forum/${id}`);
-            currentThread = t;
-            document.getElementById('forum-list-view').style.display = 'none';
-            document.getElementById('thread-view').style.display = 'block';
-            document.getElementById('thread-content').innerHTML = `<h3>${t.titulo}</h3><p>${t.conteudo || ''}</p>`;
-            renderComments(t.replies);
-        }
+    // --- FUNCTION FIXES ---
+    function toggleHwForm() { 
+        const f = document.getElementById('hw-form'); 
+        f.style.display = f.style.display === 'none' ? 'block' : 'none'; 
+    }
 
-        function renderComments(replies, parentId = null) {
-            const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
-            if(parentId === null) container.innerHTML = '';
-            replies.filter(r => r.parentId === parentId).forEach(r => {
-                const div = document.createElement('div');
-                div.className = parentId === null ? 'glass' : 'branch';
-                div.innerHTML = `<small>${r.autor}</small><p>${r.texto}</p><div id="replies-${r.id}"></div>`;
-                container.appendChild(div);
+    function closeThread() { 
+        document.getElementById('forum-list-view').style.display = 'block'; 
+        document.getElementById('thread-view').style.display = 'none'; 
+    }
+
+    async function loadMural() {
+        const data = await api('/api/mural');
+        document.getElementById('mural-list').innerHTML = data.map(p => `
+            <div class="glass" style="padding:15px;">
+                <h4>${p.titulo}</h4>
+                <small>${p.autor}</small>
+            </div>`).join('');
+    }
+
+    async function postToMural() {
+        await api('/api/mural', 'POST', { titulo: document.getElementById('m-tit').value });
+        loadMural(); 
+        document.getElementById('m-tit').value = ''; 
+        notify("Postado!");
+    }
+
+    async function loadHWs() {
+        const data = await api('/api/homeworks');
+        document.getElementById('hw-list').innerHTML = data.map(h => `
+            <div class="glass hw-card" style="padding:15px; border-left:4px solid #00d2ff;">
+                <b>${h.materia}</b>: ${h.titulo}<br>
+                <small>Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</small>
+            </div>`).join('');
+    }
+
+    async function postHomework() {
+        const body = { 
+            titulo: document.getElementById('h-tit').value, 
+            materia: document.getElementById('h-mat').value, 
+            descricao: document.getElementById('h-desc').value, 
+            dataEntrega: document.getElementById('h-date').value 
+        };
+        await api('/api/homeworks', 'POST', body);
+        toggleHwForm(); loadHWs(); notify("Lançado!");
+    }
+
+    // --- RE-ADDED MISSING FUNCTION ---
+    async function loadGrades() {
+        const grades = await api('/api/me/grades');
+        const body = document.getElementById('grades-table-body');
+        body.innerHTML = grades.map(g => `
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding:15px;">${g.materia}</td>
+                <td style="padding:15px; text-align:center;">${g.av1}</td>
+                <td style="padding:15px; text-align:center;">${g.av2}</td>
+                <td style="padding:15px; text-align:center; color:var(--accent);"><b>${((g.av1+g.av2)/2).toFixed(1)}</b></td>
+            </tr>`).join('');
+    }
+
+    async function loadForum() {
+        const data = await api('/api/forum');
+        document.getElementById('forum-container').innerHTML = data.map(t => `
+            <div class="glass" style="padding:15px; margin-top:10px; cursor:pointer;" onclick="openThread('${t._id}')">
+                ${t.titulo} <br><small>Por ${t.autor}</small>
+            </div>`).join('');
+    }
+
+    async function openThread(id) {
+        const t = await api(`/api/forum/${id}`);
+        currentThread = t;
+        document.getElementById('forum-list-view').style.display = 'none';
+        document.getElementById('thread-view').style.display = 'block';
+        document.getElementById('thread-content').innerHTML = `<h3>${t.titulo}</h3><p>${t.conteudo || ''}</p>`;
+        renderComments(t.replies);
+    }
+
+    // --- FIXED RECURSION (MAX STACK SIZE) ---
+    function renderComments(replies, parentId = null) {
+        const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
+        if (!container) return; // Safety check
+        if (parentId === null) container.innerHTML = '';
+
+        const children = replies.filter(r => r.parentId === parentId);
+        
+        children.forEach(r => {
+            const div = document.createElement('div');
+            div.className = parentId === null ? 'glass reply-box' : 'branch';
+            div.style.padding = "10px";
+            div.style.marginTop = "10px";
+            div.innerHTML = `
+                <small style="color:var(--accent)">${r.autor}</small>
+                <p>${r.texto}</p>
+                <div id="replies-${r.id}"></div>
+            `;
+            container.appendChild(div);
+            // Only recurse if we are moving forward to prevent loops
+            if (r.id !== parentId) {
                 renderComments(replies, r.id);
-            });
-        }
+            }
+        });
+    }
 
-        async function postReply(parentId) {
-            const texto = document.getElementById('main-reply').value;
-            await api('/api/forum/reply', 'POST', { threadId: currentThread._id, texto, parentId });
-            openThread(currentThread._id); document.getElementById('main-reply').value = '';
-        }
+    async function postReply(parentId) {
+        const texto = document.getElementById('main-reply').value;
+        if(!texto) return;
+        await api('/api/forum/reply', 'POST', { threadId: currentThread._id, texto, parentId });
+        openThread(currentThread._id); 
+        document.getElementById('main-reply').value = '';
+    }
 
-        async function postThread() {
-            const body = { titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value };
-            await api('/api/forum', 'POST', body);
-            document.getElementById('forum-composer').style.display = 'none'; loadForum();
-        }
+    async function postThread() {
+        const body = { titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value };
+        await api('/api/forum', 'POST', body);
+        document.getElementById('forum-composer').style.display = 'none'; 
+        loadForum();
+    }
 
-        function generatePDF() { html2pdf().from(document.getElementById('pdf-content')).save('Vertex_Boletim.pdf'); }
-        function logout() { localStorage.clear(); location.reload(); }
-        window.onload = () => { const u = localStorage.getItem('v-user'); if(u) initApp(JSON.parse(u)); };
-    </script>
+    async function loadDirecao() {
+        const users = await api('/api/direcao/users');
+        const body = document.getElementById('user-admin-body');
+        if(body) {
+            body.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.nome}</td>
+                    <td>${u.role}</td>
+                </tr>`).join('');
+        }
+    }
+
+    function generatePDF() { html2pdf().from(document.getElementById('pdf-content')).save('Vertex_Boletim.pdf'); }
+    function logout() { localStorage.clear(); location.reload(); }
+    
+    window.onload = () => { 
+        const u = localStorage.getItem('v-user'); 
+        if (u) initApp(JSON.parse(u)); 
+    };
+</script>
 </body>
 </html>
