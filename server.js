@@ -107,7 +107,11 @@ app.post('/api/forum/comentar/:id', authenticate, async (req, res) => {
 
 app.post('/api/forum/votar/:id', authenticate, async (req, res) => {
     const thread = await Thread.findById(req.params.id);
-    if (!thread.enquete || !thread.enquete.votosUsuarios) return res.status(400).json({ msg: "Thread sem enquete" });
+    if (!thread.enquete) return res.status(400).json({ msg: "Thread sem enquete" });
+    
+    // Inicializar votosUsuarios se não existir (threads antigas)
+    if (!thread.enquete.votosUsuarios) thread.enquete.votosUsuarios = [];
+    
     if (thread.enquete.votosUsuarios.includes(req.user.id)) return res.status(400).json({ msg: "Já votou!" });
     thread.enquete.opcoes[req.body.opcaoIndex].votos += 1;
     thread.enquete.votosUsuarios.push(req.user.id);
@@ -137,7 +141,11 @@ app.post('/api/noticias/comentar/:id', authenticate, async (req, res) => {
 
 app.post('/api/noticias/votar/:id', authenticate, async (req, res) => {
     const noticia = await Noticia.findById(req.params.id);
-    if (!noticia.enquete || !noticia.enquete.votosUsuarios) return res.status(400).json({ msg: "Notícia sem enquete" });
+    if (!noticia.enquete) return res.status(400).json({ msg: "Notícia sem enquete" });
+    
+    // Inicializar votosUsuarios se não existir (notícias antigas)
+    if (!noticia.enquete.votosUsuarios) noticia.enquete.votosUsuarios = [];
+    
     if (noticia.enquete.votosUsuarios.includes(req.user.id)) return res.status(400).json({ msg: "Já votou!" });
     noticia.enquete.opcoes[req.body.opcaoIndex].votos += 1;
     noticia.enquete.votosUsuarios.push(req.user.id);
