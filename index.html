@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertex | Professional</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Vertex | Professional Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg: #020408; 
-            --surface: rgba(13, 17, 23, 0.7); 
-            --primary-grad: linear-gradient(135deg, #0062ff 0%, #6100ff 100%);
+            --bg: #02040a; 
+            --surface: rgba(20, 25, 35, 0.7); 
+            --primary-grad: linear-gradient(135deg, #0055ff 0%, #7a00ff 100%);
             --accent: #0084ff; 
+            --danger: #ff3366;
             --border: rgba(255, 255, 255, 0.08);
             --text: #ffffff; 
             --text-dim: #94a3b8;
@@ -20,187 +20,136 @@
         body { 
             background: var(--bg); color: var(--text); 
             font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; 
-            background-image: radial-gradient(circle at 50% 0%, #101a30 0%, #020408 50%);
+            background-image: radial-gradient(circle at 50% -20%, #1a2a4a 0%, #02040a 60%);
             min-height: 100vh;
         }
 
-        /* PREMIUM COMPONENTS */
-        .glass { 
-            background: var(--surface); 
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border); 
-            border-radius: 20px; 
-        }
+        .glass { background: var(--surface); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 20px; }
         .btn { 
-            background: var(--primary-grad); color: white; border: none; 
-            padding: 16px; border-radius: 14px; cursor: pointer; 
-            font-weight: 700; width: 100%; font-size: 15px;
-            box-shadow: 0 8px 20px rgba(0, 98, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--primary-grad); color: white; border: none; padding: 16px; border-radius: 14px; 
+            font-weight: 700; width: 100%; transition: 0.3s; box-shadow: 0 8px 25px rgba(0, 85, 255, 0.2);
         }
-        .btn:active { transform: scale(0.96); filter: brightness(1.2); }
+        .btn:active { transform: scale(0.96); }
 
-        input, textarea { 
-            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); 
-            color: #fff; padding: 16px; border-radius: 14px; 
-            width: 100%; margin-bottom: 14px; font-size: 16px;
-            transition: border 0.3s;
+        input, textarea, select { 
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); color: #fff; 
+            padding: 16px; border-radius: 14px; width: 100%; margin-bottom: 12px; font-size: 15px;
         }
-        input:focus { border-color: var(--accent); }
 
-        /* NAVIGATION BAR */
         nav { 
-            position: fixed; bottom: 15px; left: 15px; right: 15px;
-            background: rgba(13, 17, 23, 0.85); 
-            backdrop-filter: blur(20px);
-            display: flex; justify-content: space-around; 
-            padding: 12px; border-radius: 24px;
-            border: 1px solid var(--border);
-            z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: fixed; bottom: 15px; left: 15px; right: 15px; background: rgba(10, 15, 25, 0.9); 
+            backdrop-filter: blur(20px); display: flex; justify-content: space-around; 
+            padding: 12px; border-radius: 25px; border: 1px solid var(--border); z-index: 1000;
         }
-        .nav-item { 
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--text-dim); font-size: 10px; font-weight: 600;
-            transition: 0.3s;
-        }
-        .nav-item.active { color: #fff; }
-        .nav-item.active::after {
-            content: ''; width: 4px; height: 4px; background: var(--accent);
-            border-radius: 50%; margin-top: 4px; box-shadow: 0 0 10px var(--accent);
-        }
+        .nav-item { color: var(--text-dim); font-size: 9px; font-weight: 700; text-align: center; text-transform: uppercase; cursor: pointer;}
+        .nav-item.active { color: #fff; text-shadow: 0 0 10px var(--accent); }
 
-        /* DASHBOARD ELEMENTS */
-        .view { display: none; padding: 20px; animation: slideIn 0.4s ease-out; }
+        .view { display: none; padding: 20px; animation: slideIn 0.3s ease-out; }
         .view.active { display: block; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .card { padding: 20px; margin-bottom: 16px; }
-        .badge { 
-            background: var(--primary-grad); font-size: 10px; padding: 4px 10px;
-            border-radius: 8px; font-weight: 800; text-transform: uppercase;
-        }
+        .card { padding: 20px; margin-bottom: 15px; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; margin-bottom: 10px; }
+        .badge-oc { background: var(--danger); }
+        .badge-at { background: var(--accent); }
 
-        /* AUTH SCREEN */
-        #auth-page { 
-            height: 100vh; display: flex; flex-direction: column; 
-            justify-content: center; padding: 30px;
-        }
-        .logo-text { 
-            font-size: 42px; font-weight: 900; letter-spacing: -2px; 
-            background: var(--primary-grad); -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 10px;
-        }
+        #auth-page { height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 30px; }
+        .logo-text { font-size: 40px; font-weight: 800; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="auth-page">
         <div class="logo-text">VERTEX</div>
-        <p style="text-align:center; color:var(--text-dim); margin-top:0; margin-bottom:40px; font-size:14px;">Academic Management System</p>
-        <div class="glass card">
-            <div id="reg-fields" style="display:none;">
-                <input type="text" id="reg-nome" placeholder="Nome Completo">
-                <input type="text" id="reg-turma" placeholder="Ex: 9º Ano B">
-            </div>
-            <input type="email" id="email" placeholder="Email">
+        <div class="glass card" style="margin-top:40px;">
+            <input type="email" id="email" placeholder="Email Institucional">
             <input type="password" id="senha" placeholder="Senha">
-            <button class="btn" onclick="handleAuth()">Acessar Plataforma</button>
-            <p onclick="toggleAuth()" style="text-align:center; color:var(--text-dim); font-size:12px; margin-top:20px; text-decoration:underline;">Trocar para Cadastro / Login</p>
+            <button class="btn" onclick="handleAuth()">ENTRAR NO SISTEMA</button>
         </div>
     </div>
 
     <div id="app-shell" style="display:none;">
-        <header>
+        <header style="padding: 25px 20px; display: flex; justify-content: space-between; align-items: center;">
             <div style="display:flex; align-items:center; gap:12px;">
-                <img id="user-avatar" style="width:44px; height:44px; border-radius:15px; border:1px solid var(--border);">
+                <img id="user-avatar" style="width:45px; height:45px; border-radius:14px; border:1.5px solid var(--accent);">
                 <div>
                     <div id="user-name-label" style="font-weight:700; font-size:16px;"></div>
-                    <div id="user-role-label" style="font-size:11px; color:var(--text-dim); letter-spacing:0.5px;"></div>
+                    <div id="user-role-label" style="font-size:10px; color:var(--text-dim); text-transform: uppercase;"></div>
                 </div>
             </div>
-            <div class="badge" id="turma-badge"></div>
         </header>
 
         <div id="view-home" class="view active">
-            <div id="prof-post-area" style="display:none; margin-bottom:30px;">
-                <div class="glass card" style="border: 1px solid rgba(0, 98, 255, 0.3);">
-                    <input type="text" id="m-tit" placeholder="Anunciar algo para a turma...">
-                    <button class="btn" onclick="postToMural()">Publicar Aviso</button>
+            <h3 style="margin-bottom:20px;">Últimas Notícias</h3>
+            <div id="prof-news-area" style="display:none;">
+                <input type="text" id="n-tit" placeholder="Título da notícia...">
+                <button class="btn" onclick="postNoticia()" style="margin-bottom:20px;">Publicar Notícia</button>
+            </div>
+            <div id="noticias-list"></div>
+        </div>
+
+        <div id="view-atividades" class="view">
+            <h3 style="margin-bottom:20px;">Atividades & Tarefas</h3>
+            <div id="prof-at-area" style="display:none;">
+                <div class="glass card">
+                    <input type="text" id="at-mat" placeholder="Matéria">
+                    <input type="text" id="at-tit" placeholder="Título">
+                    <input type="date" id="at-date">
+                    <button class="btn" onclick="postAtividade()">Lançar para Turma</button>
                 </div>
             </div>
-            <h3 style="margin-left:5px;">Mural de Avisos</h3>
-            <div id="mural-list"></div>
+            <div id="atividades-list"></div>
         </div>
 
-        <div id="view-homeworks" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0;">Atividades</h3>
-                <button class="btn" id="btn-new-hw" style="display:none; width:auto; padding:8px 15px; font-size:12px;" onclick="toggleHwForm()">+ Criar</button>
+        <div id="view-ocorrencias" class="view">
+            <h3 style="margin-bottom:20px;">Sistema Disciplinar</h3>
+            <div id="prof-oc-area" style="display:none;">
+                <div class="glass card">
+                    <input type="text" id="oc-aluno" placeholder="Nome do Aluno">
+                    <select id="oc-tipo">
+                        <option value="Leve">Leve</option>
+                        <option value="Media">Média</option>
+                        <option value="Grave">Grave</option>
+                        <option value="Advertencia">ADVERTÊNCIA</option>
+                    </select>
+                    <textarea id="oc-desc" placeholder="Relato detalhado do incidente..."></textarea>
+                    <button class="btn" onclick="postOcorrencia()" style="background:var(--danger)">Registrar Ocorrência</button>
+                </div>
             </div>
-            <div id="hw-form" class="glass card" style="display:none;">
-                <input type="text" id="h-mat" placeholder="Matéria">
-                <input type="text" id="h-tit" placeholder="Título da Atividade">
-                <textarea id="h-desc" placeholder="Instruções..."></textarea>
-                <input type="date" id="h-date">
-                <button class="btn" onclick="postHomework()">Enviar para Turma</button>
-            </div>
-            <div id="hw-list"></div>
-        </div>
-
-        <div id="view-grades" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-                <h3 style="margin:0;">Notas e Faltas</h3>
-                <button onclick="generatePDF()" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; padding:10px 16px; border-radius:12px; font-size:12px;">Exportar PDF</button>
-            </div>
-            <div id="grades-container"></div>
+            <div id="ocorrencias-list"></div>
         </div>
 
         <div id="view-forum" class="view">
+            <h3>Fórum da Turma</h3>
             <div id="forum-list-view">
                 <div class="glass card">
-                    <input type="text" id="f-tit" placeholder="Assunto do tópico">
-                    <textarea id="f-con" placeholder="Escreva sua dúvida ou sugestão..."></textarea>
-                    <button class="btn" onclick="postThread()">Iniciar Tópico</button>
+                    <input type="text" id="f-tit" placeholder="Título da discussão">
+                    <textarea id="f-con" placeholder="Conteúdo..."></textarea>
+                    <button class="btn" onclick="postThread()">Abrir Discussão</button>
                 </div>
-                <div id="forum-container" style="margin-top:25px;"></div>
-            </div>
-            <div id="thread-view" style="display:none;">
-                <div onclick="closeThread()" style="color:var(--accent); font-weight:600; margin-bottom:20px; display:flex; align-items:center; gap:5px;"><span>←</span> Voltar ao Fórum</div>
-                <div id="thread-content" class="glass card" style="background:none;"></div>
-                <div id="comment-tree"></div>
-                <div style="margin-top:20px;">
-                    <textarea id="main-reply" placeholder="Sua contribuição..."></textarea>
-                    <button class="btn" onclick="postReply(null)">Comentar</button>
-                </div>
+                <div id="forum-container"></div>
             </div>
         </div>
 
         <nav>
-            <div class="nav-item active" onclick="switchView('home')">MURAL</div>
-            <div class="nav-item" onclick="switchView('homeworks')">TAREFAS</div>
-            <div class="nav-item" onclick="switchView('grades')">NOTAS</div>
-            <div class="nav-item" onclick="switchView('forum')">FÓRUM</div>
-            <div class="nav-item" onclick="logout()" style="color:#ff4d4d;">SAIR</div>
+            <div class="nav-item active" onclick="switchView('home')">Notícias</div>
+            <div class="nav-item" onclick="switchView('atividades')">Atividades</div>
+            <div class="nav-item" onclick="switchView('ocorrencias')">Ocorrências</div>
+            <div class="nav-item" onclick="switchView('forum')">Fórum</div>
+            <div class="nav-item" onclick="logout()" style="color:#ff4444;">Sair</div>
         </nav>
     </div>
 
     <script>
-        let isLogin = true, currentThread = null;
+        let isLogin = true, userData = null;
 
         const api = async (url, method = 'GET', body = null) => {
             const token = localStorage.getItem('v-token');
-            const opts = { 
-                method, 
-                headers: { 'Content-Type': 'application/json', 'Authorization': token || '' } 
-            };
+            const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': token || '' } };
             if (body) opts.body = JSON.stringify(body);
-            try {
-                const res = await fetch(url, opts);
-                if (!res.ok) throw new Error();
-                return await res.json();
-            } catch (e) { return null; }
+            const res = await fetch(url, opts);
+            if (!res.ok) return null;
+            return await res.json();
         };
 
         function switchView(id) {
@@ -208,185 +157,117 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
             
-            const navs = document.querySelectorAll('.nav-item');
-            const indexMap = { 'home': 0, 'homeworks': 1, 'grades': 2, 'forum': 3 };
-            navs[indexMap[id]].classList.add('active');
-
-            if (id === 'home') loadMural();
-            if (id === 'homeworks') loadHWs();
+            if (id === 'home') loadNoticias();
+            if (id === 'atividades') loadAtividades();
+            if (id === 'ocorrencias') loadOcorrencias();
             if (id === 'forum') loadForum();
-            if (id === 'grades') loadGrades();
-        }
-
-        function toggleAuth() { 
-            isLogin = !isLogin; 
-            document.getElementById('reg-fields').style.display = isLogin ? 'none' : 'block'; 
         }
 
         async function handleAuth() {
-            const body = { 
-                email: document.getElementById('email').value, 
-                senha: document.getElementById('senha').value,
-                nome: document.getElementById('reg-nome').value,
-                turma: document.getElementById('reg-turma').value
-            };
-            const res = await fetch(isLogin ? '/api/auth/login' : '/api/auth/register', {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ email, senha })
             });
             const data = await res.json();
             if (res.ok) {
-                if (isLogin) {
-                    localStorage.setItem('v-token', data.token);
-                    localStorage.setItem('v-user', JSON.stringify(data));
-                    initApp(data);
-                } else { alert("Conta criada!"); toggleAuth(); }
-            } else alert("Erro no acesso.");
+                localStorage.setItem('v-token', data.token);
+                localStorage.setItem('v-user', JSON.stringify(data));
+                initApp(data);
+            } else alert(data.msg);
         }
 
         function initApp(u) {
+            userData = u;
             document.getElementById('auth-page').style.display = 'none';
             document.getElementById('app-shell').style.display = 'block';
             document.getElementById('user-avatar').src = u.avatar;
             document.getElementById('user-name-label').innerText = u.nome;
-            document.getElementById('user-role-label').innerText = u.role.toUpperCase();
-            document.getElementById('turma-badge').innerText = u.turma || 'Geral';
+            document.getElementById('user-role-label').innerText = u.role;
+
             if (u.role !== 'aluno') {
-                document.getElementById('prof-post-area').style.display = 'block';
-                document.getElementById('btn-new-hw').style.display = 'block';
+                document.getElementById('prof-news-area').style.display = 'block';
+                document.getElementById('prof-at-area').style.display = 'block';
+                document.getElementById('prof-oc-area').style.display = 'block';
             }
             switchView('home');
         }
 
-        async function loadMural() {
-            const data = await api('/api/mural');
-            if (data) document.getElementById('mural-list').innerHTML = data.map(p => `
+        async function loadNoticias() {
+            const data = await api('/api/noticias');
+            if (data) document.getElementById('noticias-list').innerHTML = data.map(n => `
                 <div class="glass card">
-                    <div style="font-weight:600; margin-bottom:8px; line-height:1.4;">${p.titulo}</div>
-                    <div style="color:var(--text-dim); font-size:11px; display:flex; justify-content:space-between;">
-                        <span>${p.autor}</span>
-                        <span>${new Date(p.createdAt).toLocaleDateString()}</span>
-                    </div>
+                    <div style="font-weight:700;">${n.titulo}</div>
+                    <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">Por ${n.autor}</div>
                 </div>`).join('');
         }
 
-        async function postToMural() {
-            const tit = document.getElementById('m-tit').value;
-            if (await api('/api/mural', 'POST', { titulo: tit })) {
-                document.getElementById('m-tit').value = '';
-                loadMural();
+        async function postNoticia() {
+            const tit = document.getElementById('n-tit').value;
+            if (await api('/api/noticias', 'POST', { titulo: tit })) {
+                document.getElementById('n-tit').value = '';
+                loadNoticias();
             }
         }
 
-        function toggleHwForm() {
-            const f = document.getElementById('hw-form');
-            f.style.display = f.style.display === 'none' ? 'block' : 'none';
-        }
-
-        async function loadHWs() {
-            const data = await api('/api/homeworks');
-            if (data) document.getElementById('hw-list').innerHTML = data.map(h => `
-                <div class="glass card" style="border-left: 3px solid #0062ff;">
-                    <div style="color:var(--accent); font-size:10px; font-weight:800; margin-bottom:5px;">${h.materia.toUpperCase()}</div>
-                    <div style="font-weight:700; margin-bottom:8px;">${h.titulo}</div>
-                    <div style="font-size:13px; color:var(--text-dim); line-height:1.5;">${h.descricao}</div>
-                    <div style="margin-top:15px; font-size:11px; font-weight:600; opacity:0.8;">📅 Entrega: ${new Date(h.dataEntrega).toLocaleDateString()}</div>
+        async function loadAtividades() {
+            const data = await api('/api/atividades');
+            if (data) document.getElementById('atividades-list').innerHTML = data.map(a => `
+                <div class="glass card" style="border-left:4px solid var(--accent);">
+                    <div class="badge badge-at">${a.materia}</div>
+                    <div style="font-weight:700;">${a.titulo}</div>
+                    <div style="font-size:11px; margin-top:10px;">Entrega: ${new Date(a.dataEntrega).toLocaleDateString()}</div>
                 </div>`).join('');
         }
 
-        async function postHomework() {
-            const body = { 
-                materia: document.getElementById('h-mat').value, 
-                titulo: document.getElementById('h-tit').value,
-                descricao: document.getElementById('h-desc').value,
-                dataEntrega: document.getElementById('h-date').value
+        async function loadOcorrencias() {
+            const data = await api('/api/ocorrencias');
+            if (data) document.getElementById('ocorrencias-list').innerHTML = data.map(o => `
+                <div class="glass card" style="border-left:4px solid ${o.tipo === 'Advertencia' ? '#ff0000' : '#ffaa00'}">
+                    <div class="badge badge-oc" style="background:${o.tipo === 'Advertencia' ? '#ff0000' : ''}">${o.tipo}</div>
+                    <div style="font-weight:700;">${o.alunoNome}</div>
+                    <div style="font-size:13px; margin:10px 0; opacity:0.8;">${o.descricao}</div>
+                    <div style="font-size:10px; color:var(--text-dim);">Relatado por ${o.autor} • Status: ${o.status}</div>
+                </div>`).join('');
+        }
+
+        async function postOcorrencia() {
+            const body = {
+                alunoNome: document.getElementById('oc-aluno').value,
+                tipo: document.getElementById('oc-tipo').value,
+                descricao: document.getElementById('oc-desc').value,
+                turma: userData.turma
             };
-            if (await api('/api/homeworks', 'POST', body)) { toggleHwForm(); loadHWs(); }
+            if (await api('/api/ocorrencias', 'POST', body)) {
+                alert("Ocorrência registrada!");
+                loadOcorrencias();
+            }
         }
-
-        async function loadGrades() {
-            const grades = await api('/api/me/grades');
-            if (grades) document.getElementById('grades-container').innerHTML = grades.map(g => `
-                <div class="glass card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:700;">${g.materia}</div>
-                        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">A1: ${g.av1} • A2: ${g.av2}</div>
-                    </div>
-                    <div style="font-size:22px; font-weight:900; background:var(--primary-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${((g.av1+g.av2)/2).toFixed(1)}</div>
-                </div>`).join('');
-        }
-
-        function generatePDF() { html2pdf().from(document.getElementById('grades-container')).save('Vertex_Notas.pdf'); }
 
         async function loadForum() {
             const data = await api('/api/forum');
             if (data) document.getElementById('forum-container').innerHTML = data.map(t => `
-                <div class="glass card" onclick="openThread('${t._id}')" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="glass card" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight:600; margin-bottom:4px;">${t.titulo}</div>
-                        <div style="color:var(--text-dim); font-size:11px;">Iniciado por ${t.autor}</div>
+                        <div style="font-weight:600;">${t.titulo}</div>
+                        <div style="font-size:11px; color:var(--text-dim);">Autor: ${t.autor}</div>
                     </div>
-                    <div style="background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:8px; font-size:11px;">💬 ${t.replies.length}</div>
+                    <button onclick="reportBullying('${t._id}')" style="background:none; border:1px solid #ff3366; color:#ff3366; padding:5px 10px; border-radius:8px; font-size:10px;">REPORTAR</button>
                 </div>`).join('');
         }
 
-        async function postThread() {
-            const body = { titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value };
-            if (await api('/api/forum', 'POST', body)) {
-                document.getElementById('f-tit').value = '';
-                document.getElementById('f-con').value = '';
+        async function reportBullying(id) {
+            if (confirm("Deseja reportar este conteúdo por Bullying? A Direção será notificada.")) {
+                await api(`/api/forum/report/${id}`, 'POST');
+                alert("Reporte enviado. O sistema gerou uma ocorrência automática para análise.");
                 loadForum();
             }
         }
 
-        async function openThread(id) {
-            const t = await api(`/api/forum/${id}`);
-            if (!t) return;
-            currentThread = t;
-            document.getElementById('forum-list-view').style.display = 'none';
-            document.getElementById('thread-view').style.display = 'block';
-            document.getElementById('thread-content').innerHTML = `
-                <h2 style="margin:0 0 15px 0; font-size:20px;">${t.titulo}</h2>
-                <p style="color:var(--text-dim); line-height:1.6; font-size:14px;">${t.conteudo}</p>
-            `;
-            renderComments(t.replies);
-        }
-
-        function renderComments(replies, parentId = null) {
-            const container = parentId === null ? document.getElementById('comment-tree') : document.getElementById(`replies-${parentId}`);
-            if (!container) return;
-            if (parentId === null) container.innerHTML = '';
-            replies.filter(r => r.parentId === (parentId ? parentId.toString() : null)).forEach(r => {
-                const div = document.createElement('div');
-                div.style.padding = '15px 0';
-                div.style.borderLeft = parentId ? '1px solid rgba(255,255,255,0.05)' : 'none';
-                div.style.paddingLeft = parentId ? '15px' : '0';
-                div.innerHTML = `
-                    <div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px;">${r.autor}</div>
-                    <div style="font-size:14px; line-height:1.4; opacity:0.9;">${r.texto}</div>
-                    <div id="replies-${r.id}"></div>
-                `;
-                container.appendChild(div);
-                renderComments(replies, r.id);
-            });
-        }
-
-        async function postReply(parentId) {
-            const texto = document.getElementById('main-reply').value;
-            if (await api('/api/forum/reply', 'POST', { threadId: currentThread._id, texto, parentId })) {
-                document.getElementById('main-reply').value = '';
-                openThread(currentThread._id);
-            }
-        }
-
-        function closeThread() { document.getElementById('forum-list-view').style.display = 'block'; document.getElementById('thread-view').style.display = 'none'; }
         function logout() { localStorage.clear(); location.reload(); }
-
-        window.onload = () => { 
-            const u = localStorage.getItem('v-user'); 
-            if (u) initApp(JSON.parse(u)); 
-        };
+        window.onload = () => { const u = localStorage.getItem('v-user'); if (u) initApp(JSON.parse(u)); };
     </script>
 </body>
 </html>
