@@ -4,96 +4,596 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vertex | Blue Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #010409; --surface: rgba(15, 20, 30, 0.8); --primary: #0070ff; --grad: linear-gradient(135deg, #0070ff 0%, #7000ff 100%); --text: #ffffff; --dim: #94a3b8; --danger: #ff3366; --border: rgba(255, 255, 255, 0.08); --success: #00ff88; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; background-image: radial-gradient(circle at 50% 0%, #0d1b3a 0%, #010409 60%); min-height: 100vh; }
-        .glass { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .btn { background: var(--grad); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; font-size: 12px; transition: transform 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        input, textarea, select { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px; font-family: inherit; }
-        .view { display: none; padding: 20px; animation: fadeInUp 0.4s ease; }
-        .view.active { display: block; }
-        nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 15, 25, 0.95); display: flex; justify-content: space-around; padding: 15px; border-radius: 30px; border: 1px solid var(--border); z-index: 1000; }
-        .nav-item { color: var(--dim); font-size: 9px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
-        .nav-item.active { color: #fff; text-shadow: 0 0 15px var(--primary); }
-        .logo-text { font-size: 38px; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
-        .comment { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; margin-top: 5px; font-size: 12px; border-left: 2px solid var(--primary); }
-        .poll-opt { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
-        .poll-opt:hover { background: rgba(255,255,255,0.1); }
+        :root { 
+            --bg: #0a0e27; 
+            --surface: rgba(20, 25, 45, 0.85); 
+            --surface-hover: rgba(30, 35, 55, 0.95);
+            --primary: #3b82f6; 
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --accent: #8b5cf6;
+            --success: #10b981; 
+            --warning: #f59e0b;
+            --danger: #ef4444; 
+            --text: #f1f5f9; 
+            --text-dim: #94a3b8; 
+            --border: rgba(148, 163, 184, 0.1); 
+            --glow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
         
-        .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 20px; margin: 10px 0; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            margin: 0; 
+            padding: 0;
+        }
         
-        .grade-input { width: 60px; padding: 8px; text-align: center; font-weight: 800; font-size: 14px; background: rgba(0,112,255,0.2); border: 2px solid var(--primary); }
-        .grade-input:focus { background: rgba(0,112,255,0.4); box-shadow: 0 0 10px var(--primary); }
-        .grade-input.filled { background: rgba(0,255,136,0.2); border-color: var(--success); }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            min-height: 100vh; 
+            padding-bottom: 100px;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            overflow-x: hidden;
+        }
         
-        .attendance-btn { padding: 8px 15px; margin: 2px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; border: 2px solid var(--border); background: rgba(0,0,0,0.3); color: var(--dim); transition: all 0.2s; }
-        .attendance-btn.present { background: rgba(0,255,136,0.3); border-color: var(--success); color: var(--success); }
-        .attendance-btn.absent { background: rgba(255,51,102,0.3); border-color: var(--danger); color: var(--danger); }
+        /* Glass morphism card */
+        .card { 
+            background: var(--surface); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin-bottom: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
         
-        #offline-indicator { position: fixed; top: 20px; right: 20px; background: rgba(255,165,0,0.9); padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; display: none; z-index: 2000; }
-        #offline-indicator.show { display: block; }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
         
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card:hover {
+            background: var(--surface-hover);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: var(--glow);
+        }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
-        th { color: var(--primary); font-weight: 800; }
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        /* Buttons */
+        .btn { 
+            background: linear-gradient(135deg, var(--primary), var(--accent)); 
+            color: white; 
+            border: none; 
+            padding: 14px 24px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 14px;
+            cursor: pointer; 
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn:active { 
+            transform: scale(0.96); 
+        }
+        
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text);
+        }
+        
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        /* Inputs */
+        input, textarea, select { 
+            background: rgba(15, 23, 42, 0.6); 
+            border: 2px solid var(--border); 
+            color: var(--text); 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            width: 100%; 
+            margin-bottom: 12px; 
+            font-family: inherit; 
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus { 
+            outline: none;
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Views */
+        .view { 
+            display: none; 
+            padding: 24px 20px; 
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        .view.active { 
+            display: block; 
+        }
+        
+        /* Navigation */
+        nav { 
+            position: fixed; 
+            bottom: 16px; 
+            left: 16px; 
+            right: 16px; 
+            background: rgba(15, 23, 42, 0.95); 
+            backdrop-filter: blur(20px);
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            padding: 12px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-item { 
+            color: var(--text-dim); 
+            font-size: 10px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            cursor: pointer; 
+            transition: all 0.3s;
+            padding: 8px 12px;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav-item.active { 
+            color: var(--primary); 
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .nav-item.active::before {
+            width: 80%;
+        }
+        
+        .nav-item:hover {
+            color: var(--text);
+        }
+        
+        /* Header */
+        header { 
+            padding: 24px 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        
+        #user-avatar { 
+            width: 48px; 
+            height: 48px;
+            border-radius: 16px; 
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Logo */
+        .logo { 
+            font-size: 48px; 
+            font-weight: 900; 
+            background: linear-gradient(135deg, var(--primary), var(--accent)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            text-align: center;
+            letter-spacing: -2px;
+            position: relative;
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.8)); }
+        }
+        
+        /* Comments & Polls */
+        .comment { 
+            background: rgba(15, 23, 42, 0.5); 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            margin-top: 8px; 
+            border-left: 3px solid var(--primary);
+            font-size: 13px;
+            animation: slideIn 0.3s;
+        }
+        
+        .poll-option { 
+            background: rgba(59, 130, 246, 0.05); 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            margin-top: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .poll-option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--percentage, 0%);
+            background: rgba(59, 130, 246, 0.2);
+            transition: width 0.5s;
+        }
+        
+        .poll-option:hover { 
+            background: rgba(59, 130, 246, 0.15); 
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        /* Skeleton */
+        .skeleton { 
+            background: linear-gradient(90deg, rgba(148, 163, 184, 0.05) 25%, rgba(148, 163, 184, 0.15) 50%, rgba(148, 163, 184, 0.05) 75%); 
+            background-size: 200% 100%; 
+            animation: shimmer 1.5s infinite; 
+            border-radius: 12px; 
+            height: 20px; 
+            margin: 10px 0; 
+        }
+        
+        @keyframes shimmer { 
+            0% { background-position: 200% 0; } 
+            100% { background-position: -200% 0; } 
+        }
+        
+        /* Grade Input */
+        .grade-input { 
+            width: 80px; 
+            padding: 10px; 
+            text-align: center; 
+            font-weight: 700; 
+            font-size: 16px; 
+            background: rgba(59, 130, 246, 0.1); 
+            border: 2px solid var(--primary);
+            margin: 0 4px;
+        }
+        
+        .grade-input:focus { 
+            background: rgba(59, 130, 246, 0.2); 
+            box-shadow: var(--glow);
+            transform: scale(1.05);
+        }
+        
+        .grade-input.filled { 
+            background: rgba(16, 185, 129, 0.2); 
+            border-color: var(--success);
+        }
+        
+        /* Attendance */
+        .attendance-btn { 
+            padding: 10px 20px; 
+            margin: 0 4px; 
+            border-radius: 10px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            border: 2px solid var(--border); 
+            background: rgba(15, 23, 42, 0.5); 
+            color: var(--text-dim); 
+            transition: all 0.3s;
+        }
+        
+        .attendance-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .attendance-btn.present { 
+            background: rgba(16, 185, 129, 0.2); 
+            border-color: var(--success); 
+            color: var(--success);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .attendance-btn.absent { 
+            background: rgba(239, 68, 68, 0.2); 
+            border-color: var(--danger); 
+            color: var(--danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Offline indicator */
+        #offline-indicator { 
+            position: fixed; 
+            top: 24px; 
+            right: 24px; 
+            background: rgba(245, 158, 11, 0.95); 
+            padding: 12px 24px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            display: none; 
+            z-index: 2000;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+        }
+        
+        #offline-indicator.show { 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Tables */
+        table { 
+            width: 100%; 
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        
+        th, td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            font-size: 13px;
+        }
+        
+        th { 
+            color: var(--primary); 
+            font-weight: 700; 
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        
+        tbody tr {
+            background: rgba(15, 23, 42, 0.5);
+            transition: all 0.3s;
+        }
+        
+        tbody tr:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: scale(1.01);
+        }
+        
+        tbody tr td:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+        
+        tbody tr td:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp { 
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Section Headers */
+        h3 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text), var(--text-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge.primary { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Loading dots */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
 
-    <div id="offline-indicator">🔴 MODO OFFLINE</div>
+    <div id="offline-indicator">
+        <span>🔴</span>
+        <span>MODO OFFLINE</span>
+    </div>
 
-    <div id="auth-page" style="height:100vh; display:flex; flex-direction:column; justify-content:center; padding:30px;">
-        <div class="logo-text">VERTEX</div>
-        <div class="glass" style="margin-top:20px">
+    <div id="auth-page" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:32px;">
+        <div class="logo" style="margin-bottom: 40px;">VERTEX</div>
+        <div class="card" style="max-width: 400px; width: 100%;">
             <input type="text" id="reg-nome" placeholder="Nome Completo" style="display:none">
-            <input type="email" id="email" placeholder="Email"><input type="password" id="senha" placeholder="Senha">
-            <button class="btn" onclick="handleAuth()">ENTRAR</button>
-            <p onclick="toggleAuthMode()" style="text-align:center; font-size:11px; margin-top:15px; color:var(--dim); cursor:pointer">Não tem conta? Criar agora</p>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="senha" placeholder="Senha">
+            <button class="btn" onclick="handleAuth()" style="width: 100%;">ENTRAR</button>
+            <p onclick="toggleAuthMode()" style="text-align:center; font-size:13px; margin-top:20px; color:var(--text-dim); cursor:pointer; font-weight: 500;">
+                Não tem conta? <span style="color: var(--primary); font-weight: 700;">Criar agora</span>
+            </p>
         </div>
     </div>
 
     <div id="app-shell" style="display:none">
-        <header style="padding:20px; display:flex; align-items:center; gap:10px">
-            <img id="user-avatar" style="width:40px; border-radius:12px; border:2px solid var(--primary)">
-            <div>
-                <div id="user-name-label" style="font-weight:800; font-size:14px"></div>
-                <div id="user-role-label" style="font-size:9px; color:var(--primary); font-weight:800"></div>
+        <header>
+            <img id="user-avatar" alt="Avatar">
+            <div style="flex: 1;">
+                <div id="user-name-label" style="font-weight:700; font-size:16px;"></div>
+                <div id="user-role-label" style="font-size:11px; color:var(--primary); font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;"></div>
             </div>
         </header>
 
-        <div id="view-home" class="view active"><h3>Avisos</h3><div id="noticias-list"></div></div>
-        <div id="view-atividades" class="view"><h3>Tarefas</h3><div id="atividades-list"></div></div>
-        <div id="view-ocorrencias" class="view"><h3>Ocorrências</h3><div id="ocorrencias-list"></div></div>
+        <div id="view-home" class="view active">
+            <h3>📢 Avisos</h3>
+            <div id="noticias-list"></div>
+        </div>
+
+        <div id="view-atividades" class="view">
+            <h3>📚 Tarefas</h3>
+            <div id="atividades-list"></div>
+        </div>
+
+        <div id="view-ocorrencias" class="view">
+            <h3>⚠️ Ocorrências</h3>
+            <div id="ocorrencias-list"></div>
+        </div>
 
         <div id="view-forum" class="view">
-            <h3>Fórum da Galera</h3>
+            <h3>💬 Fórum</h3>
             <div id="forum-list"></div>
-            <div class="glass" style="margin-top:20px">
+            <div class="card" style="margin-top:24px">
                 <h4>Novo Tópico</h4>
                 <input id="f-tit" placeholder="Título do Assunto">
-                <textarea id="f-con" placeholder="O que você quer falar?"></textarea>
-                <div style="border: 1px dashed var(--border); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
-                    <p style="font-size:10px; color:var(--dim)">ADICIONAR ENQUETE (Opcional)</p>
+                <textarea id="f-con" placeholder="O que você quer discutir?" rows="4"></textarea>
+                <div style="border: 2px dashed var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                    <p style="font-size:11px; color:var(--text-dim); font-weight: 700; margin-bottom: 12px;">📊 ADICIONAR ENQUETE (Opcional)</p>
                     <input id="f-enq-p" placeholder="Pergunta da Enquete">
-                    <input id="f-enq-o" placeholder="Opções (ex: Sim, Não, Talvez)">
+                    <input id="f-enq-o" placeholder="Opções separadas por vírgula">
                 </div>
-                <button class="btn" onclick="postarThread()">POSTAR NO FÓRUM</button>
+                <button class="btn" onclick="postarThread()" style="width: 100%;">PUBLICAR</button>
             </div>
         </div>
 
         <div id="view-notas" class="view">
-            <h3>Sistema de Notas</h3>
-            <div class="glass">
+            <h3>📊 Notas</h3>
+            <div class="card">
                 <select id="nota-materia" onchange="loadNotasMateria()">
                     <option value="">Selecione uma Matéria</option>
                 </select>
-                <select id="nota-bimestre" onchange="loadNotasMateria()" style="margin-top:10px">
+                <select id="nota-bimestre" onchange="loadNotasMateria()">
                     <option value="1">1º Bimestre</option>
                     <option value="2">2º Bimestre</option>
                     <option value="3">3º Bimestre</option>
@@ -104,47 +604,47 @@
         </div>
 
         <div id="view-presenca" class="view">
-            <h3>Chamada</h3>
-            <div class="glass">
+            <h3>✅ Chamada</h3>
+            <div class="card">
                 <select id="presenca-materia" onchange="loadPresenca()">
                     <option value="">Selecione uma Matéria</option>
                 </select>
-                <input type="date" id="presenca-data" onchange="loadPresenca()" style="margin-top:10px">
+                <input type="date" id="presenca-data" onchange="loadPresenca()">
             </div>
             <div id="presenca-list"></div>
-            <button class="btn" onclick="salvarPresenca()" style="margin-top:20px; display:none" id="salvar-presenca-btn">SALVAR PRESENÇA</button>
+            <button class="btn" onclick="salvarPresenca()" style="margin-top:24px; display:none" id="salvar-presenca-btn">SALVAR PRESENÇA</button>
         </div>
 
         <div id="view-gestao" class="view">
-            <h3>Gestão</h3>
+            <h3>⚙️ Gestão</h3>
             
             <div id="gestao-noticias" style="display:none">
-                <div class="glass">
+                <div class="card">
                     <h4>Criar Notícia</h4>
-                    <input id="n-tit" placeholder="Título da Notícia">
-                    <textarea id="n-con" placeholder="Conteúdo"></textarea>
-                    <div style="border: 1px dashed var(--border); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
-                        <p style="font-size:10px; color:var(--dim)">ENQUETE (Opcional)</p>
+                    <input id="n-tit" placeholder="Título">
+                    <textarea id="n-con" placeholder="Conteúdo" rows="4"></textarea>
+                    <div style="border: 2px dashed var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                        <p style="font-size:11px; color:var(--text-dim); font-weight: 700; margin-bottom: 12px;">📊 ENQUETE (Opcional)</p>
                         <input id="n-enq-p" placeholder="Pergunta">
-                        <input id="n-enq-o" placeholder="Opções (ex: Sim, Não)">
+                        <input id="n-enq-o" placeholder="Opções separadas por vírgula">
                     </div>
                     <button class="btn" onclick="criarNoticia()">PUBLICAR NOTÍCIA</button>
                 </div>
             </div>
 
             <div id="gestao-tarefas" style="display:none">
-                <div class="glass">
+                <div class="card">
                     <h4>Criar Tarefa</h4>
                     <input id="t-mat" placeholder="Matéria">
-                    <input id="t-tit" placeholder="Título da Tarefa">
-                    <textarea id="t-desc" placeholder="Descrição"></textarea>
+                    <input id="t-tit" placeholder="Título">
+                    <textarea id="t-desc" placeholder="Descrição" rows="3"></textarea>
                     <input id="t-data" type="date">
                     <button class="btn" onclick="criarTarefa()">CRIAR TAREFA</button>
                 </div>
             </div>
 
             <div id="gestao-ocorrencias" style="display:none">
-                <div class="glass">
+                <div class="card">
                     <h4>Registrar Ocorrência</h4>
                     <input id="o-aluno" placeholder="Nome do Aluno">
                     <select id="o-tipo">
@@ -153,15 +653,15 @@
                         <option value="Elogio">Elogio</option>
                         <option value="Observação">Observação</option>
                     </select>
-                    <textarea id="o-desc" placeholder="Descrição"></textarea>
+                    <textarea id="o-desc" placeholder="Descrição" rows="3"></textarea>
                     <button class="btn" onclick="criarOcorrencia()">REGISTRAR</button>
                 </div>
             </div>
         </div>
 
         <div id="view-admin" class="view">
-            <h3>Master Panel</h3>
-            <div class="glass">
+            <h3>👑 Master Panel</h3>
+            <div class="card">
                 <h4>Gerenciar Usuários</h4>
                 <div id="admin-users-list"></div>
             </div>
@@ -170,12 +670,12 @@
         <nav>
             <div class="nav-item active" onclick="switchView('home')">Início</div>
             <div class="nav-item" onclick="switchView('atividades')">Tarefas</div>
-            <div class="nav-item" onclick="switchView('ocorrencias')">Ocorrências</div>
+            <div class="nav-item" onclick="switchView('ocorrencias')">Avisos</div>
             <div class="nav-item" onclick="switchView('forum')">Fórum</div>
-            <div id="nav-notas" class="nav-item" onclick="switchView('notas')" style="display:none; color:#ff9500">Notas</div>
-            <div id="nav-presenca" class="nav-item" onclick="switchView('presenca')" style="display:none; color:#00d4ff">Chamada</div>
-            <div id="nav-gestao" class="nav-item" onclick="switchView('gestao')" style="display:none; color:#00d4ff">Gestão</div>
-            <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none; color:gold">Master</div>
+            <div id="nav-notas" class="nav-item" onclick="switchView('notas')" style="display:none;">Notas</div>
+            <div id="nav-presenca" class="nav-item" onclick="switchView('presenca')" style="display:none;">Chamada</div>
+            <div id="nav-gestao" class="nav-item" onclick="switchView('gestao')" style="display:none;">Gestão</div>
+            <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none;">Admin</div>
             <div class="nav-item" onclick="logout()" style="color:var(--danger)">Sair</div>
         </nav>
     </div>
