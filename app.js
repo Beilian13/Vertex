@@ -1,7 +1,10 @@
-// ========== OFFLINE MODE & SYNC ==========
+// ==================== CONFIGURAÇÃO GLOBAL ====================
+const API_BASE = '';
+let currentUser = null;
 let isOnline = navigator.onLine;
 let syncQueue = [];
 
+// ==================== OFFLINE MODE ====================
 window.addEventListener('online', () => {
     isOnline = true;
     document.getElementById('offline-indicator').classList.remove('show');
@@ -35,281 +38,503 @@ async function processSyncQueue() {
     syncQueue = [];
 }
 
-// ========== API WRAPPER ==========
-const api = async (u, m='GET', b=null) => {
-    const headers = { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('v-token') || '' };
+// ==================== API WRAPPER ====================
+const api = async (url, method = 'GET', body = null) => {
+    const headers = { 
+        'Content-Type': 'application/json', 
+        'Authorization': localStorage.getItem('v-token') || '' 
+    };
     
-    if (!isOnline && m !== 'GET') {
-        addToSyncQueue({ url: u, method: m, headers, body: b ? JSON.stringify(b) : null });
-        return { offline: true };
+    if (!isOnline && method !== 'GET') {
+        addToSyncQueue({ url: API_BASE + url, method, headers, body: body ? JSON.stringify(body) : null });
+        return { offline: true, success: true };
     }
     
     try {
-        const r = await fetch(u, { method: m, headers, body: b ? JSON.stringify(b) : null });
-        return r.ok ? await r.json() : null;
-    } catch (e) {
-        if (m !== 'GET') addToSyncQueue({ url: u, method: m, headers, body: b ? JSON.stringify(b) : null });
+        const response = await fetch(API_BASE + url, { 
+            method, 
+            headers, 
+            body: body ? JSON.stringify(body) : null 
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        if (method !== 'GET') {
+            addToSyncQueue({ url: API_BASE + url, method, headers, body: body ? JSON.stringify(body) : null });
+        }
         return null;
     }
 };
 
-// ========== SKELETON LOADERS ==========
+// ==================== SKELETON LOADERS ====================
 function showSkeleton(containerId, count = 3) {
     const container = document.getElementById(containerId);
+    if (!container) return;
+    
     container.innerHTML = Array(count).fill(0).map(() => `
-        <div class="glass">
-            <div class="skeleton" style="width:60%"></div>
-            <div class="skeleton" style="width:40%; height:15px"></div>
-            <div class="skeleton" style="width:80%; height:15px"></div>
+        <div class="card">
+            <div class="skeleton" style="width:60%; height: 24px; margin-bottom: 12px;"></div>
+            <div class="skeleton" style="width:40%; height:16px; margin-bottom: 8px;"></div>
+            <div class="skeleton" style="width:80%; height:16px;"></div>
         </div>
     `).join('');
 }
 
-// ========== AUTH ==========
+// ==================== AUTH ====================
 let isLogin = true;
-function toggleAuthMode() { isLogin = !isLogin; document.getElementById('reg-nome').style.display = isLogin ? 'none' : 'block'; }
 
-async function handleAuth() {
-    const r = await api(isLogin ? '/api/auth/login' : '/api/auth/register', 'POST', { 
-        email: email.value, 
-        senha: senha.value, 
-        nome: document.getElementById('reg-nome').value 
-    });
-    if(r) { 
-        if(isLogin) { 
-            localStorage.setItem('v-token', r.token); 
-            localStorage.setItem('v-user', JSON.stringify(r)); 
-            location.reload(); 
-        } else toggleAuthMode(); 
+function toggleAuthMode() {
+    isLogin = !isLogin;
+    const regNome = document.getElementById('reg-nome');
+    const btn = document.querySelector('#auth-page .btn');
+    
+    if (isLogin) {
+        regNome.style.display = 'none';
+        btn.textContent = 'ENTRAR';
+    } else {
+        regNome.style.display = 'block';
+        btn.textContent = 'CRIAR CONTA';
     }
 }
 
-// ========== INIT APP ==========
-function initApp(u) {
-    document.getElementById('auth-page').style.display = 'none'; 
-    document.getElementById('app-shell').style.display = 'block';
-    document.getElementById('user-avatar').src = u.avatar; 
-    document.getElementById('user-name-label').innerText = u.nome; 
-    document.getElementById('user-role-label').innerText = u.role;
+async function handleAuth() {
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+    const nome = document.getElementById('reg-nome').value;
     
-    // Admin: tudo
-    if(u.role === 'Admin') {
-        document.getElementById('nav-admin').style.display = 'block';
-        document.getElementById('nav-gestao').style.display = 'block';
-        document.getElementById('nav-notas').style.display = 'block';
-        document.getElementById('nav-presenca').style.display = 'block';
-        document.getElementById('gestao-noticias').style.display = 'block';
-        document.getElementById('gestao-tarefas').style.display = 'block';
-        document.getElementById('gestao-ocorrencias').style.display = 'block';
+    if (!email || !senha) {
+        alert('Preencha todos os campos!');
+        return;
     }
-    // Direção: notícias, ocorrências, tarefas, notas
-    else if(u.role === 'Direcao') {
-        document.getElementById('nav-gestao').style.display = 'block';
-        document.getElementById('nav-notas').style.display = 'block';
-        document.getElementById('gestao-noticias').style.display = 'block';
-        document.getElementById('gestao-tarefas').style.display = 'block';
-        document.getElementById('gestao-ocorrencias').style.display = 'block';
+    
+    if (!isLogin && !nome) {
+        alert('Preencha seu nome completo!');
+        return;
     }
-    // Professor: tarefas, ocorrências, notas, presença
-    else if(u.role === 'Professor') {
-        document.getElementById('nav-gestao').style.display = 'block';
-        document.getElementById('nav-notas').style.display = 'block';
-        document.getElementById('nav-presenca').style.display = 'block';
-        document.getElementById('gestao-tarefas').style.display = 'block';
-        document.getElementById('gestao-ocorrencias').style.display = 'block';
+    
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const payload = { email, senha };
+    if (!isLogin) payload.nome = nome;
+    
+    const result = await api(endpoint, 'POST', payload);
+    
+    if (result) {
+        if (isLogin && result.token) {
+            localStorage.setItem('v-token', result.token);
+            localStorage.setItem('v-user', JSON.stringify(result));
+            location.reload();
+        } else if (!isLogin) {
+            alert('Conta criada! Faça login agora.');
+            toggleAuthMode();
+        }
+    } else {
+        alert('Erro ao autenticar. Verifique suas credenciais.');
     }
-    // Aluno: ver notas
-    else if(u.role === 'Aluno') {
-        document.getElementById('nav-notas').style.display = 'block';
-    }
+}
+
+// ==================== INIT APP ====================
+function initApp(user) {
+    currentUser = user;
+    
+    document.getElementById('auth-page').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'block';
+    document.getElementById('user-avatar').src = user.avatar;
+    document.getElementById('user-name-label').textContent = user.nome;
+    document.getElementById('user-role-label').textContent = user.role;
+    
+    // Configurar permissões por role
+    const permissions = {
+        Admin: ['nav-gestao', 'nav-notas', 'nav-presenca', 'nav-admin', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Direcao: ['nav-gestao', 'nav-notas', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Professor: ['nav-gestao', 'nav-notas', 'nav-presenca', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Aluno: ['nav-notas']
+    };
+    
+    const userPermissions = permissions[user.role] || [];
+    userPermissions.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'block';
+    });
     
     switchView('home');
     loadMaterias();
 }
 
-// ========== MATÉRIAS ==========
+// ==================== MATÉRIAS ====================
 let materiasCache = [];
+
 async function loadMaterias() {
-    const m = await api('/api/materias');
-    if (m) {
-        materiasCache = m;
-        const opts = m.map(mat => `<option value="${mat._id}">${mat.nome}</option>`).join('');
-        document.getElementById('nota-materia').innerHTML = '<option value="">Selecione uma Matéria</option>' + opts;
-        document.getElementById('presenca-materia').innerHTML = '<option value="">Selecione uma Matéria</option>' + opts;
+    const materias = await api('/api/materias');
+    if (materias) {
+        materiasCache = materias;
+        const options = materias.map(m => `<option value="${m._id}">${m.nome}</option>`).join('');
+        
+        const notaMateriaSelect = document.getElementById('nota-materia');
+        const presencaMateriaSelect = document.getElementById('presenca-materia');
+        
+        if (notaMateriaSelect) {
+            notaMateriaSelect.innerHTML = '<option value="">Selecione uma Matéria</option>' + options;
+        }
+        
+        if (presencaMateriaSelect) {
+            presencaMateriaSelect.innerHTML = '<option value="">Selecione uma Matéria</option>' + options;
+        }
     }
 }
 
-// ========== FORUM ==========
+// ==================== FORUM ====================
 async function loadForum() {
     showSkeleton('forum-list', 3);
-    const d = await api('/api/forum');
-    if(d) document.getElementById('forum-list').innerHTML = d.map(t => `
-        <div class="glass">
+    const threads = await api('/api/forum');
+    
+    const container = document.getElementById('forum-list');
+    if (!container) return;
+    
+    if (!threads || threads.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">💬</div>
+                <p>Nenhum tópico ainda. Seja o primeiro a postar!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = threads.map(t => `
+        <div class="card">
             <h4>${t.titulo}</h4>
-            <p style="font-size:12px">${t.conteudo}</p>
-            <small style="color:var(--dim)">por ${t.autor}</small>
+            <p style="font-size:14px; margin: 12px 0; line-height: 1.6;">${t.conteudo}</p>
+            <small style="color:var(--text-dim)">por <strong>${t.autor}</strong></small>
+            
             ${t.temEnquete ? `
-                <div style="margin-top:15px; padding:10px; background:rgba(0,112,255,0.1); border-radius:10px">
-                    <b style="font-size:11px">${t.enquete.pergunta}</b>
-                    ${t.enquete.opcoes.map((o, idx) => `
-                        <div class="poll-opt" onclick="votar('${t._id}', ${idx})">
-                            ${o.texto} <span style="float:right; color:var(--primary)">${o.votos} votos</span>
-                        </div>
-                    `).join('')}
+                <div style="margin-top:20px; padding:16px; background:rgba(59,130,246,0.05); border-radius:12px; border: 2px solid rgba(59,130,246,0.2);">
+                    <strong style="font-size:13px; display: block; margin-bottom: 12px;">${t.enquete.pergunta}</strong>
+                    ${t.enquete.opcoes.map((o, idx) => {
+                        const total = t.enquete.opcoes.reduce((sum, opt) => sum + (opt.votos || 0), 0);
+                        const percentage = total > 0 ? Math.round((o.votos / total) * 100) : 0;
+                        return `
+                            <div class="poll-option" onclick="votar('${t._id}', ${idx})" style="--percentage: ${percentage}%">
+                                <div style="position: relative; z-index: 1; display: flex; justify-content: space-between;">
+                                    <span>${o.texto}</span>
+                                    <span style="color:var(--primary); font-weight: 700;">${o.votos || 0} votos (${percentage}%)</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             ` : ''}
-            <div style="margin-top:15px">
-                ${t.comentarios.map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
-                <input id="in-${t._id}" placeholder="Comentar..." style="margin-top:10px">
-                <button class="btn" onclick="comentar('${t._id}')">ENVIAR</button>
+            
+            <div style="margin-top:20px;">
+                ${(t.comentarios || []).map(c => `
+                    <div class="comment">
+                        <strong>${c.autor}:</strong> ${c.texto}
+                    </div>
+                `).join('')}
+                <input id="in-${t._id}" placeholder="Escreva um comentário..." style="margin-top:12px;">
+                <button class="btn" onclick="comentar('${t._id}')" style="margin-top: 8px;">COMENTAR</button>
             </div>
         </div>
     `).join('');
 }
 
 async function postarThread() {
-    const b = { titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value };
-    if(document.getElementById('f-enq-p').value) b.enquete = { pergunta: document.getElementById('f-enq-p').value, opcoes: document.getElementById('f-enq-o').value.split(',').map(s => s.trim()) };
-    await api('/api/forum', 'POST', b); 
+    const titulo = document.getElementById('f-tit').value;
+    const conteudo = document.getElementById('f-con').value;
+    const enquetaPergunta = document.getElementById('f-enq-p').value;
+    const enqueteOpcoes = document.getElementById('f-enq-o').value;
+    
+    if (!titulo || !conteudo) {
+        alert('Preencha título e conteúdo!');
+        return;
+    }
+    
+    const payload = { titulo, conteudo };
+    
+    if (enquetaPergunta && enqueteOpcoes) {
+        payload.enquete = {
+            pergunta: enquetaPergunta,
+            opcoes: enqueteOpcoes.split(',').map(s => s.trim()).filter(s => s)
+        };
+    }
+    
+    await api('/api/forum', 'POST', payload);
+    
     document.getElementById('f-tit').value = '';
     document.getElementById('f-con').value = '';
     document.getElementById('f-enq-p').value = '';
     document.getElementById('f-enq-o').value = '';
+    
     loadForum();
 }
 
-async function comentar(id) { 
-    const txt = document.getElementById('in-'+id).value; 
-    await api('/api/forum/comentar/'+id, 'POST', { texto: txt }); 
-    loadForum(); 
+async function comentar(threadId) {
+    const input = document.getElementById('in-' + threadId);
+    const texto = input.value;
+    
+    if (!texto) {
+        alert('Digite um comentário!');
+        return;
+    }
+    
+    await api(`/api/forum/comentar/${threadId}`, 'POST', { texto });
+    input.value = '';
+    loadForum();
 }
 
-async function votar(id, idx) { 
-    await api('/api/forum/votar/'+id, 'POST', { opcaoIndex: idx }); 
-    loadForum(); 
+async function votar(threadId, opcaoIndex) {
+    await api(`/api/forum/votar/${threadId}`, 'POST', { opcaoIndex });
+    loadForum();
 }
 
-// ========== NOTICIAS ==========
+// ==================== NOTICIAS ====================
 async function loadNoticias() {
     showSkeleton('noticias-list', 3);
-    const d = await api('/api/noticias'); 
-    if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `
-        <div class="glass">
-            <b>${n.titulo}</b>
-            <p style="font-size:12px; margin:10px 0">${n.conteudo || ''}</p>
-            <small style="color:var(--dim)">por ${n.autor}</small>
+    const noticias = await api('/api/noticias');
+    
+    const container = document.getElementById('noticias-list');
+    if (!container) return;
+    
+    if (!noticias || noticias.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📢</div>
+                <p>Nenhuma notícia publicada ainda.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = noticias.map(n => `
+        <div class="card">
+            <h4>${n.titulo}</h4>
+            <p style="font-size:14px; margin: 12px 0; line-height: 1.6;">${n.conteudo || ''}</p>
+            <small style="color:var(--text-dim)">por <strong>${n.autor}</strong></small>
+            
             ${n.temEnquete ? `
-                <div style="margin-top:15px; padding:10px; background:rgba(0,112,255,0.1); border-radius:10px">
-                    <b style="font-size:11px">${n.enquete.pergunta}</b>
-                    ${n.enquete.opcoes.map((o, idx) => `
-                        <div class="poll-opt" onclick="votarNoticia('${n._id}', ${idx})">
-                            ${o.texto} <span style="float:right; color:var(--primary)">${o.votos} votos</span>
-                        </div>
-                    `).join('')}
+                <div style="margin-top:20px; padding:16px; background:rgba(59,130,246,0.05); border-radius:12px; border: 2px solid rgba(59,130,246,0.2);">
+                    <strong style="font-size:13px; display: block; margin-bottom: 12px;">${n.enquete.pergunta}</strong>
+                    ${n.enquete.opcoes.map((o, idx) => {
+                        const total = n.enquete.opcoes.reduce((sum, opt) => sum + (opt.votos || 0), 0);
+                        const percentage = total > 0 ? Math.round((o.votos / total) * 100) : 0;
+                        return `
+                            <div class="poll-option" onclick="votarNoticia('${n._id}', ${idx})" style="--percentage: ${percentage}%">
+                                <div style="position: relative; z-index: 1; display: flex; justify-content: space-between;">
+                                    <span>${o.texto}</span>
+                                    <span style="color:var(--primary); font-weight: 700;">${o.votos || 0} votos (${percentage}%)</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             ` : ''}
-            <div style="margin-top:15px">
-                ${(n.comentarios || []).map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
-                <input id="nc-in-${n._id}" placeholder="Comentar..." style="margin-top:10px">
-                <button class="btn" onclick="comentarNoticia('${n._id}')">ENVIAR</button>
+            
+            <div style="margin-top:20px;">
+                ${(n.comentarios || []).map(c => `
+                    <div class="comment">
+                        <strong>${c.autor}:</strong> ${c.texto}
+                    </div>
+                `).join('')}
+                <input id="nc-in-${n._id}" placeholder="Escreva um comentário..." style="margin-top:12px;">
+                <button class="btn" onclick="comentarNoticia('${n._id}')" style="margin-top: 8px;">COMENTAR</button>
             </div>
         </div>
     `).join('');
 }
 
 async function criarNoticia() {
-    const b = { titulo: document.getElementById('n-tit').value, conteudo: document.getElementById('n-con').value };
-    if(document.getElementById('n-enq-p').value) b.enquete = { pergunta: document.getElementById('n-enq-p').value, opcoes: document.getElementById('n-enq-o').value.split(',').map(s => s.trim()) };
-    await api('/api/noticias', 'POST', b);
-    document.getElementById('n-tit').value = ''; document.getElementById('n-con').value = ''; document.getElementById('n-enq-p').value = ''; document.getElementById('n-enq-o').value = '';
+    const titulo = document.getElementById('n-tit').value;
+    const conteudo = document.getElementById('n-con').value;
+    const enquetaPergunta = document.getElementById('n-enq-p').value;
+    const enqueteOpcoes = document.getElementById('n-enq-o').value;
+    
+    if (!titulo || !conteudo) {
+        alert('Preencha título e conteúdo!');
+        return;
+    }
+    
+    const payload = { titulo, conteudo };
+    
+    if (enquetaPergunta && enqueteOpcoes) {
+        payload.enquete = {
+            pergunta: enquetaPergunta,
+            opcoes: enqueteOpcoes.split(',').map(s => s.trim()).filter(s => s)
+        };
+    }
+    
+    await api('/api/noticias', 'POST', payload);
+    
+    document.getElementById('n-tit').value = '';
+    document.getElementById('n-con').value = '';
+    document.getElementById('n-enq-p').value = '';
+    document.getElementById('n-enq-o').value = '';
+    
     loadNoticias();
 }
 
-async function comentarNoticia(id) { 
-    const txt = document.getElementById('nc-in-'+id).value; 
-    await api('/api/noticias/comentar/'+id, 'POST', { texto: txt }); 
-    loadNoticias(); 
+async function comentarNoticia(noticiaId) {
+    const input = document.getElementById('nc-in-' + noticiaId);
+    const texto = input.value;
+    
+    if (!texto) {
+        alert('Digite um comentário!');
+        return;
+    }
+    
+    await api(`/api/noticias/comentar/${noticiaId}`, 'POST', { texto });
+    input.value = '';
+    loadNoticias();
 }
 
-async function votarNoticia(id, idx) { 
-    await api('/api/noticias/votar/'+id, 'POST', { opcaoIndex: idx }); 
-    loadNoticias(); 
+async function votarNoticia(noticiaId, opcaoIndex) {
+    await api(`/api/noticias/votar/${noticiaId}`, 'POST', { opcaoIndex });
+    loadNoticias();
 }
 
-// ========== ATIVIDADES ==========
-async function loadAtividades() { 
+// ==================== ATIVIDADES ====================
+async function loadAtividades() {
     showSkeleton('atividades-list', 3);
-    const d = await api('/api/atividades'); 
-    if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `
-        <div class="glass">
-            <b>${a.materia}</b>: ${a.titulo}<br>
-            <small style="color:var(--dim)">Entrega: ${new Date(a.dataEntrega).toLocaleDateString('pt-BR')}</small>
+    const atividades = await api('/api/atividades');
+    
+    const container = document.getElementById('atividades-list');
+    if (!container) return;
+    
+    if (!atividades || atividades.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <p>Nenhuma tarefa cadastrada.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = atividades.map(a => `
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <span class="badge primary">${a.materia}</span>
+                <span style="font-size: 12px; color: var(--text-dim);">
+                    📅 ${new Date(a.dataEntrega).toLocaleDateString('pt-BR')}
+                </span>
+            </div>
+            <h4>${a.titulo}</h4>
+            ${a.descricao ? `<p style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">${a.descricao}</p>` : ''}
         </div>
-    `).join(''); 
+    `).join('');
 }
 
 async function criarTarefa() {
-    await api('/api/atividades', 'POST', { 
-        materia: document.getElementById('t-mat').value, 
-        titulo: document.getElementById('t-tit').value,
-        descricao: document.getElementById('t-desc').value,
-        dataEntrega: document.getElementById('t-data').value
-    });
-    document.getElementById('t-mat').value = ''; document.getElementById('t-tit').value = ''; document.getElementById('t-desc').value = ''; document.getElementById('t-data').value = '';
+    const materia = document.getElementById('t-mat').value;
+    const titulo = document.getElementById('t-tit').value;
+    const descricao = document.getElementById('t-desc').value;
+    const dataEntrega = document.getElementById('t-data').value;
+    
+    if (!materia || !titulo || !dataEntrega) {
+        alert('Preencha os campos obrigatórios!');
+        return;
+    }
+    
+    await api('/api/atividades', 'POST', { materia, titulo, descricao, dataEntrega });
+    
+    document.getElementById('t-mat').value = '';
+    document.getElementById('t-tit').value = '';
+    document.getElementById('t-desc').value = '';
+    document.getElementById('t-data').value = '';
+    
     loadAtividades();
 }
 
-// ========== OCORRENCIAS ==========
-async function loadOcorrencias() { 
+// ==================== OCORRENCIAS ====================
+async function loadOcorrencias() {
     showSkeleton('ocorrencias-list', 3);
-    const d = await api('/api/ocorrencias'); 
-    if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `
-        <div class="glass" style="border-left:4px solid ${o.tipo === 'Advertência' ? '#ff3366' : o.tipo === 'Elogio' ? '#00ff88' : 'gold'}">
-            <b>${o.alunoNome}</b> - ${o.tipo}<br>
-            <small>${o.descricao}</small><br>
-            <small style="color:var(--dim)">por ${o.autor}</small>
+    const ocorrencias = await api('/api/ocorrencias');
+    
+    const container = document.getElementById('ocorrencias-list');
+    if (!container) return;
+    
+    if (!ocorrencias || ocorrencias.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <p>Nenhuma ocorrência registrada.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tipoColors = {
+        'Advertência': 'danger',
+        'Suspensão': 'danger',
+        'Elogio': 'success',
+        'Observação': 'warning'
+    };
+    
+    container.innerHTML = ocorrencias.map(o => `
+        <div class="card" style="border-left: 4px solid var(--${tipoColors[o.tipo] === 'danger' ? 'danger' : tipoColors[o.tipo] === 'success' ? 'success' : 'warning'});">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <strong>${o.alunoNome}</strong>
+                <span class="badge ${tipoColors[o.tipo]}">${o.tipo}</span>
+            </div>
+            <p style="font-size: 13px; margin: 8px 0;">${o.descricao}</p>
+            <small style="color: var(--text-dim);">Registrado por <strong>${o.autor}</strong></small>
         </div>
-    `).join(''); 
+    `).join('');
 }
 
 async function criarOcorrencia() {
-    await api('/api/ocorrencias', 'POST', {
-        alunoNome: document.getElementById('o-aluno').value,
-        tipo: document.getElementById('o-tipo').value,
-        descricao: document.getElementById('o-desc').value
-    });
-    document.getElementById('o-aluno').value = ''; document.getElementById('o-desc').value = '';
+    const alunoNome = document.getElementById('o-aluno').value;
+    const tipo = document.getElementById('o-tipo').value;
+    const descricao = document.getElementById('o-desc').value;
+    
+    if (!alunoNome || !descricao) {
+        alert('Preencha todos os campos!');
+        return;
+    }
+    
+    await api('/api/ocorrencias', 'POST', { alunoNome, tipo, descricao });
+    
+    document.getElementById('o-aluno').value = '';
+    document.getElementById('o-desc').value = '';
+    
     loadOcorrencias();
 }
 
-// ========== SISTEMA DE NOTAS (FAST INPUT) ==========
-let currentGradeIndex = 0;
+// ==================== SISTEMA DE NOTAS ====================
 let gradeInputs = [];
+let currentGradeIndex = 0;
 let ctrlPressed = false;
 let numberBuffer = '';
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Control') ctrlPressed = true;
+    if (e.key === 'Control') {
+        ctrlPressed = true;
+    }
     
     if (ctrlPressed && /^[0-9]$/.test(e.key)) {
+        e.preventDefault();
         numberBuffer += e.key;
     }
 });
 
 document.addEventListener('keyup', async (e) => {
-    if (e.key === 'Control' && numberBuffer) {
+    if (e.key === 'Control' && numberBuffer && gradeInputs.length > 0) {
         const value = parseFloat(numberBuffer) / 10;
-        if (gradeInputs[currentGradeIndex]) {
-            gradeInputs[currentGradeIndex].value = value.toFixed(1);
-            gradeInputs[currentGradeIndex].classList.add('filled');
-            
-            const alunoId = gradeInputs[currentGradeIndex].dataset.aluno;
-            const tipo = gradeInputs[currentGradeIndex].dataset.tipo;
-            const materia = document.getElementById('nota-materia').value;
-            const bimestre = document.getElementById('nota-bimestre').value;
+        
+        if (gradeInputs[currentGradeIndex] && value >= 0 && value <= 10) {
+            const input = gradeInputs[currentGradeIndex];
+            input.value = value.toFixed(1);
+            input.classList.add('filled');
             
             await api('/api/notas', 'POST', {
-                alunoId, materia, bimestre, tipo, nota: value
+                alunoId: input.dataset.aluno,
+                materia: document.getElementById('nota-materia').value,
+                bimestre: parseInt(document.getElementById('nota-bimestre').value),
+                tipo: input.dataset.tipo,
+                nota: value
             });
             
             currentGradeIndex++;
@@ -317,22 +542,27 @@ document.addEventListener('keyup', async (e) => {
                 gradeInputs[currentGradeIndex].focus();
             }
         }
+        
         numberBuffer = '';
         ctrlPressed = false;
     }
 });
 
 async function loadNotasMateria() {
-    const materia = document.getElementById('nota-materia').value;
+    const materiaId = document.getElementById('nota-materia').value;
     const bimestre = document.getElementById('nota-bimestre').value;
     
-    if (!materia) return;
+    if (!materiaId) return;
     
     showSkeleton('notas-table-container', 1);
-    const alunos = await api('/api/alunos');
-    const notas = await api(`/api/notas?materia=${materia}&bimestre=${bimestre}`);
     
-    if (!alunos) return;
+    const alunos = await api('/api/alunos');
+    const notas = await api(`/api/notas?materia=${materiaId}&bimestre=${bimestre}`);
+    
+    if (!alunos) {
+        document.getElementById('notas-table-container').innerHTML = '<p class="empty-state">Erro ao carregar alunos</p>';
+        return;
+    }
     
     const notasMap = {};
     if (notas) {
@@ -342,14 +572,14 @@ async function loadNotasMateria() {
         });
     }
     
+    const isTeacher = currentUser && ['Professor', 'Admin', 'Direcao'].includes(currentUser.role);
+    const isStudent = currentUser && currentUser.role === 'Aluno';
+    
     gradeInputs = [];
     currentGradeIndex = 0;
     
-    const user = JSON.parse(localStorage.getItem('v-user'));
-    const isTeacher = ['Professor', 'Admin', 'Direcao'].includes(user.role);
-    
-    document.getElementById('notas-table-container').innerHTML = `
-        <div class="glass" style="overflow-x:auto">
+    let tableHTML = `
+        <div class="card" style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
@@ -361,72 +591,105 @@ async function loadNotasMateria() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${alunos.map(a => {
-                        const av1 = notasMap[a._id]?.AV1 || '';
-                        const av2 = notasMap[a._id]?.AV2 || '';
-                        const p1 = notasMap[a._id]?.P1 || '';
-                        const media = av1 && av2 && p1 ? ((av1 + av2 + p1) / 3).toFixed(1) : '-';
-                        
-                        return `
-                            <tr>
-                                <td><b>${a.nome}</b></td>
-                                <td>${isTeacher ? `<input type="number" class="grade-input ${av1 ? 'filled' : ''}" value="${av1}" data-aluno="${a._id}" data-tipo="AV1" step="0.1" min="0" max="10">` : av1 || '-'}</td>
-                                <td>${isTeacher ? `<input type="number" class="grade-input ${av2 ? 'filled' : ''}" value="${av2}" data-aluno="${a._id}" data-tipo="AV2" step="0.1" min="0" max="10">` : av2 || '-'}</td>
-                                <td>${isTeacher ? `<input type="number" class="grade-input ${p1 ? 'filled' : ''}" value="${p1}" data-aluno="${a._id}" data-tipo="P1" step="0.1" min="0" max="10">` : p1 || '-'}</td>
-                                <td style="color:${media >= 6 ? 'var(--success)' : 'var(--danger)'}; font-weight:800">${media}</td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>
     `;
+    
+    alunos.forEach(aluno => {
+        const av1 = notasMap[aluno._id]?.AV1 || '';
+        const av2 = notasMap[aluno._id]?.AV2 || '';
+        const p1 = notasMap[aluno._id]?.P1 || '';
+        
+        let media = '-';
+        let mediaColor = 'var(--text-dim)';
+        
+        if (av1 && av2 && p1) {
+            const m = ((av1 + av2 + p1) / 3).toFixed(1);
+            media = m;
+            mediaColor = m >= 6 ? 'var(--success)' : 'var(--danger)';
+        }
+        
+        tableHTML += `<tr>`;
+        tableHTML += `<td><strong>${aluno.nome}</strong></td>`;
+        
+        if (isTeacher) {
+            tableHTML += `<td><input type="number" class="grade-input ${av1 ? 'filled' : ''}" value="${av1}" data-aluno="${aluno._id}" data-tipo="AV1" step="0.1" min="0" max="10"></td>`;
+            tableHTML += `<td><input type="number" class="grade-input ${av2 ? 'filled' : ''}" value="${av2}" data-aluno="${aluno._id}" data-tipo="AV2" step="0.1" min="0" max="10"></td>`;
+            tableHTML += `<td><input type="number" class="grade-input ${p1 ? 'filled' : ''}" value="${p1}" data-aluno="${aluno._id}" data-tipo="P1" step="0.1" min="0" max="10"></td>`;
+        } else {
+            tableHTML += `<td>${av1 || '-'}</td>`;
+            tableHTML += `<td>${av2 || '-'}</td>`;
+            tableHTML += `<td>${p1 || '-'}</td>`;
+        }
+        
+        tableHTML += `<td style="color: ${mediaColor}; font-weight: 700; font-size: 16px;">${media}</td>`;
+        tableHTML += `</tr>`;
+    });
+    
+    tableHTML += `</tbody></table></div>`;
+    
+    document.getElementById('notas-table-container').innerHTML = tableHTML;
     
     if (isTeacher) {
         gradeInputs = Array.from(document.querySelectorAll('.grade-input'));
-        gradeInputs.forEach((inp, idx) => {
-            inp.addEventListener('focus', () => currentGradeIndex = idx);
-            inp.addEventListener('blur', async () => {
-                if (inp.value) {
-                    inp.classList.add('filled');
+        gradeInputs.forEach((input, idx) => {
+            input.addEventListener('focus', () => {
+                currentGradeIndex = idx;
+            });
+            
+            input.addEventListener('blur', async () => {
+                if (input.value && input.value >= 0 && input.value <= 10) {
+                    input.classList.add('filled');
                     await api('/api/notas', 'POST', {
-                        alunoId: inp.dataset.aluno,
+                        alunoId: input.dataset.aluno,
                         materia: document.getElementById('nota-materia').value,
-                        bimestre: document.getElementById('nota-bimestre').value,
-                        tipo: inp.dataset.tipo,
-                        nota: parseFloat(inp.value)
+                        bimestre: parseInt(document.getElementById('nota-bimestre').value),
+                        tipo: input.dataset.tipo,
+                        nota: parseFloat(input.value)
                     });
                 }
             });
         });
-        if (gradeInputs[0]) gradeInputs[0].focus();
+        
+        if (gradeInputs[0]) {
+            gradeInputs[0].focus();
+        }
     }
 }
 
-// ========== PRESENÇA ==========
+// ==================== PRESENÇA ====================
 let presencaState = {};
 
 async function loadPresenca() {
-    const materia = document.getElementById('presenca-materia').value;
+    const materiaId = document.getElementById('presenca-materia').value;
     const data = document.getElementById('presenca-data').value;
     
-    if (!materia || !data) return;
+    if (!materiaId || !data) return;
     
     showSkeleton('presenca-list', 3);
+    
     const alunos = await api('/api/alunos');
-    const presencas = await api(`/api/presencas?materia=${materia}&data=${data}`);
+    const presencas = await api(`/api/presencas?materia=${materiaId}&data=${data}`);
+    
+    if (!alunos) return;
     
     presencaState = {};
     if (presencas) {
-        presencas.forEach(p => presencaState[p.alunoId] = p.status);
+        presencas.forEach(p => {
+            presencaState[p.alunoId] = p.status;
+        });
     }
     
-    document.getElementById('presenca-list').innerHTML = alunos.map(a => `
-        <div class="glass" style="display:flex; justify-content:space-between; align-items:center">
-            <b>${a.nome}</b>
+    document.getElementById('presenca-list').innerHTML = alunos.map(aluno => `
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>${aluno.nome}</strong>
             <div>
-                <button class="attendance-btn ${presencaState[a._id] === 'P' ? 'present' : ''}" onclick="togglePresenca('${a._id}', 'P')">P</button>
-                <button class="attendance-btn ${presencaState[a._id] === 'F' ? 'absent' : ''}" onclick="togglePresenca('${a._id}', 'F')">F</button>
+                <button class="attendance-btn ${presencaState[aluno._id] === 'P' ? 'present' : ''}" 
+                        onclick="togglePresenca('${aluno._id}', 'P')">
+                    ✓ Presente
+                </button>
+                <button class="attendance-btn ${presencaState[aluno._id] === 'F' ? 'absent' : ''}" 
+                        onclick="togglePresenca('${aluno._id}', 'F')">
+                    ✗ Falta
+                </button>
             </div>
         </div>
     `).join('');
@@ -440,71 +703,108 @@ function togglePresenca(alunoId, status) {
 }
 
 async function salvarPresenca() {
-    const materia = document.getElementById('presenca-materia').value;
+    const materiaId = document.getElementById('presenca-materia').value;
     const data = document.getElementById('presenca-data').value;
     
-    const registros = Object.entries(presencaState).map(([alunoId, status]) => ({
-        alunoId, materia, data, status
-    })).filter(r => r.status);
+    const registros = Object.entries(presencaState)
+        .filter(([_, status]) => status)
+        .map(([alunoId, status]) => ({
+            alunoId,
+            materia: materiaId,
+            data,
+            status
+        }));
     
     await api('/api/presencas/batch', 'POST', { registros });
-    alert('Presença salva!');
+    alert('✅ Presença salva com sucesso!');
 }
 
-// ========== ADMIN ==========
+// ==================== ADMIN ====================
 async function loadAdminUsers() {
     showSkeleton('admin-users-list', 3);
     const users = await api('/api/admin/users');
-    if(users) document.getElementById('admin-users-list').innerHTML = users.map(u => `
-        <div class="glass" style="display:flex; justify-content:space-between; align-items:center; padding:15px">
-            <div>
-                <b>${u.nome}</b><br>
-                <small style="color:var(--dim)">${u.email}</small><br>
-                <span style="color:var(--primary); font-size:10px; font-weight:800">${u.role}</span>
+    
+    const container = document.getElementById('admin-users-list');
+    if (!container) return;
+    
+    if (!users) return;
+    
+    container.innerHTML = users.map(user => `
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+            <div style="flex: 1;">
+                <strong style="display: block; margin-bottom: 4px;">${user.nome}</strong>
+                <small style="color: var(--text-dim); display: block; margin-bottom: 8px;">${user.email}</small>
+                <span class="badge primary">${user.role}</span>
             </div>
-            <div>
-                <select id="role-${u._id}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px; margin-right:5px; font-size:11px">
-                    <option ${u.role === 'Aluno' ? 'selected' : ''}>Aluno</option>
-                    <option ${u.role === 'Professor' ? 'selected' : ''}>Professor</option>
-                    <option ${u.role === 'Direcao' ? 'selected' : ''}>Direcao</option>
-                    <option ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="role-${user._id}" style="padding: 10px; border-radius: 8px; background: rgba(15, 23, 42, 0.6); border: 2px solid var(--border); color: var(--text); font-size: 12px;">
+                    <option ${user.role === 'Aluno' ? 'selected' : ''}>Aluno</option>
+                    <option ${user.role === 'Professor' ? 'selected' : ''}>Professor</option>
+                    <option ${user.role === 'Direcao' ? 'selected' : ''}>Direcao</option>
+                    <option ${user.role === 'Admin' ? 'selected' : ''}>Admin</option>
                 </select>
-                <button class="btn" style="width:auto; padding:8px 15px; font-size:10px" onclick="updateRole('${u._id}')">ATUALIZAR</button>
+                <button class="btn" style="padding: 10px 16px;" onclick="updateRole('${user._id}')">
+                    SALVAR
+                </button>
             </div>
         </div>
     `).join('');
 }
 
 async function updateRole(userId) {
-    const newRole = document.getElementById('role-'+userId).value;
+    const newRole = document.getElementById('role-' + userId).value;
     await api('/api/admin/update-role', 'POST', { userId, role: newRole });
     loadAdminUsers();
 }
 
-// ========== NAV ==========
-function switchView(v) {
-    document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    document.getElementById('view-'+v).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(x => { if(x.onclick && x.onclick.toString().includes(`'${v}'`)) x.classList.add('active'); });
-    if(v === 'home') loadNoticias(); 
-    if(v === 'atividades') loadAtividades(); 
-    if(v === 'ocorrencias') loadOcorrencias(); 
-    if(v === 'forum') loadForum();
-    if(v === 'admin') loadAdminUsers();
-    if(v === 'notas') {
-        const user = JSON.parse(localStorage.getItem('v-user'));
-        if (user.role === 'Aluno') loadNotasMateria();
+// ==================== NAVIGATION ====================
+function switchView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    const view = document.getElementById('view-' + viewName);
+    if (view) {
+        view.classList.add('active');
+    }
+    
+    document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.onclick && item.onclick.toString().includes(`'${viewName}'`)) {
+            item.classList.add('active');
+        }
+    });
+    
+    // Load data for each view
+    if (viewName === 'home') loadNoticias();
+    if (viewName === 'atividades') loadAtividades();
+    if (viewName === 'ocorrencias') loadOcorrencias();
+    if (viewName === 'forum') loadForum();
+    if (viewName === 'admin') loadAdminUsers();
+}
+
+function logout() {
+    if (confirm('Deseja realmente sair?')) {
+        localStorage.clear();
+        location.reload();
     }
 }
 
-function logout() { localStorage.clear(); location.reload(); }
-
-// ========== INIT ==========
-window.onload = () => { 
-    const u = localStorage.getItem('v-user'); 
-    if(u) initApp(JSON.parse(u)); 
+// ==================== INIT ====================
+window.addEventListener('DOMContentLoaded', () => {
+    const userJson = localStorage.getItem('v-user');
     
-    // Set presenca data to today
-    document.getElementById('presenca-data').valueAsDate = new Date();
-};
+    if (userJson) {
+        try {
+            const user = JSON.parse(userJson);
+            initApp(user);
+        } catch (e) {
+            console.error('Invalid user data:', e);
+            localStorage.clear();
+        }
+    }
+    
+    // Set today as default date for presenca
+    const presencaDataInput = document.getElementById('presenca-data');
+    if (presencaDataInput) {
+        presencaDataInput.valueAsDate = new Date();
+    }
+});
