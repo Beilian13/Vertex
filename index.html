@@ -6,24 +6,47 @@
     <title>Vertex | Blue Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #010409; --surface: rgba(15, 20, 30, 0.8); --primary: #0070ff; --grad: linear-gradient(135deg, #0070ff 0%, #7000ff 100%); --text: #ffffff; --dim: #94a3b8; --danger: #ff3366; --border: rgba(255, 255, 255, 0.08); }
+        :root { --bg: #010409; --surface: rgba(15, 20, 30, 0.8); --primary: #0070ff; --grad: linear-gradient(135deg, #0070ff 0%, #7000ff 100%); --text: #ffffff; --dim: #94a3b8; --danger: #ff3366; --border: rgba(255, 255, 255, 0.08); --success: #00ff88; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding-bottom: 90px; background-image: radial-gradient(circle at 50% 0%, #0d1b3a 0%, #010409 60%); min-height: 100vh; }
         .glass { background: var(--surface); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .btn { background: var(--grad); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; font-size: 12px; }
-        input, textarea { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px; font-family: inherit; }
+        .btn { background: var(--grad); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; font-size: 12px; transition: transform 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        input, textarea, select { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px; font-family: inherit; }
         .view { display: none; padding: 20px; animation: fadeInUp 0.4s ease; }
         .view.active { display: block; }
         nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 15, 25, 0.95); display: flex; justify-content: space-around; padding: 15px; border-radius: 30px; border: 1px solid var(--border); z-index: 1000; }
-        .nav-item { color: var(--dim); font-size: 9px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .nav-item { color: var(--dim); font-size: 9px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
         .nav-item.active { color: #fff; text-shadow: 0 0 15px var(--primary); }
         .logo-text { font-size: 38px; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
         .comment { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; margin-top: 5px; font-size: 12px; border-left: 2px solid var(--primary); }
-        .poll-opt { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; font-size: 12px; }
+        .poll-opt { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .poll-opt:hover { background: rgba(255,255,255,0.1); }
+        
+        .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 20px; margin: 10px 0; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .grade-input { width: 60px; padding: 8px; text-align: center; font-weight: 800; font-size: 14px; background: rgba(0,112,255,0.2); border: 2px solid var(--primary); }
+        .grade-input:focus { background: rgba(0,112,255,0.4); box-shadow: 0 0 10px var(--primary); }
+        .grade-input.filled { background: rgba(0,255,136,0.2); border-color: var(--success); }
+        
+        .attendance-btn { padding: 8px 15px; margin: 2px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; border: 2px solid var(--border); background: rgba(0,0,0,0.3); color: var(--dim); transition: all 0.2s; }
+        .attendance-btn.present { background: rgba(0,255,136,0.3); border-color: var(--success); color: var(--success); }
+        .attendance-btn.absent { background: rgba(255,51,102,0.3); border-color: var(--danger); color: var(--danger); }
+        
+        #offline-indicator { position: fixed; top: 20px; right: 20px; background: rgba(255,165,0,0.9); padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; display: none; z-index: 2000; }
+        #offline-indicator.show { display: block; }
+        
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
+        th { color: var(--primary); font-weight: 800; }
     </style>
 </head>
 <body>
+
+    <div id="offline-indicator">🔴 MODO OFFLINE</div>
 
     <div id="auth-page" style="height:100vh; display:flex; flex-direction:column; justify-content:center; padding:30px;">
         <div class="logo-text">VERTEX</div>
@@ -64,6 +87,34 @@
             </div>
         </div>
 
+        <div id="view-notas" class="view">
+            <h3>Sistema de Notas</h3>
+            <div class="glass">
+                <select id="nota-materia" onchange="loadNotasMateria()">
+                    <option value="">Selecione uma Matéria</option>
+                </select>
+                <select id="nota-bimestre" onchange="loadNotasMateria()" style="margin-top:10px">
+                    <option value="1">1º Bimestre</option>
+                    <option value="2">2º Bimestre</option>
+                    <option value="3">3º Bimestre</option>
+                    <option value="4">4º Bimestre</option>
+                </select>
+            </div>
+            <div id="notas-table-container"></div>
+        </div>
+
+        <div id="view-presenca" class="view">
+            <h3>Chamada</h3>
+            <div class="glass">
+                <select id="presenca-materia" onchange="loadPresenca()">
+                    <option value="">Selecione uma Matéria</option>
+                </select>
+                <input type="date" id="presenca-data" onchange="loadPresenca()" style="margin-top:10px">
+            </div>
+            <div id="presenca-list"></div>
+            <button class="btn" onclick="salvarPresenca()" style="margin-top:20px; display:none" id="salvar-presenca-btn">SALVAR PRESENÇA</button>
+        </div>
+
         <div id="view-gestao" class="view">
             <h3>Gestão</h3>
             
@@ -96,7 +147,7 @@
                 <div class="glass">
                     <h4>Registrar Ocorrência</h4>
                     <input id="o-aluno" placeholder="Nome do Aluno">
-                    <select id="o-tipo" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px;">
+                    <select id="o-tipo">
                         <option value="Advertência">Advertência</option>
                         <option value="Suspensão">Suspensão</option>
                         <option value="Elogio">Elogio</option>
@@ -121,194 +172,14 @@
             <div class="nav-item" onclick="switchView('atividades')">Tarefas</div>
             <div class="nav-item" onclick="switchView('ocorrencias')">Ocorrências</div>
             <div class="nav-item" onclick="switchView('forum')">Fórum</div>
+            <div id="nav-notas" class="nav-item" onclick="switchView('notas')" style="display:none; color:#ff9500">Notas</div>
+            <div id="nav-presenca" class="nav-item" onclick="switchView('presenca')" style="display:none; color:#00d4ff">Chamada</div>
             <div id="nav-gestao" class="nav-item" onclick="switchView('gestao')" style="display:none; color:#00d4ff">Gestão</div>
             <div id="nav-admin" class="nav-item" onclick="switchView('admin')" style="display:none; color:gold">Master</div>
             <div class="nav-item" onclick="logout()" style="color:var(--danger)">Sair</div>
         </nav>
     </div>
 
-    <script>
-        const api = async (u, m='GET', b=null) => {
-            const r = await fetch(u, { method: m, headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('v-token') || '' }, body: b ? JSON.stringify(b) : null });
-            return r.ok ? await r.json() : null;
-        };
-
-        let isLogin = true;
-        function toggleAuthMode() { isLogin = !isLogin; document.getElementById('reg-nome').style.display = isLogin ? 'none' : 'block'; }
-        
-        async function handleAuth() {
-            const r = await api(isLogin ? '/api/auth/login' : '/api/auth/register', 'POST', { email: email.value, senha: senha.value, nome: document.getElementById('reg-nome').value });
-            if(r) { if(isLogin) { localStorage.setItem('v-token', r.token); localStorage.setItem('v-user', JSON.stringify(r)); location.reload(); } else toggleAuthMode(); }
-        }
-
-        function initApp(u) {
-            document.getElementById('auth-page').style.display = 'none'; document.getElementById('app-shell').style.display = 'block';
-            document.getElementById('user-avatar').src = u.avatar; document.getElementById('user-name-label').innerText = u.nome; document.getElementById('user-role-label').innerText = u.role;
-            
-            // Admin: tudo
-            if(u.role === 'Admin') {
-                document.getElementById('nav-admin').style.display = 'block';
-                document.getElementById('nav-gestao').style.display = 'block';
-                document.getElementById('gestao-noticias').style.display = 'block';
-                document.getElementById('gestao-tarefas').style.display = 'block';
-                document.getElementById('gestao-ocorrencias').style.display = 'block';
-            }
-            // Direção: notícias, ocorrências, tarefas
-            else if(u.role === 'Direcao') {
-                document.getElementById('nav-gestao').style.display = 'block';
-                document.getElementById('gestao-noticias').style.display = 'block';
-                document.getElementById('gestao-tarefas').style.display = 'block';
-                document.getElementById('gestao-ocorrencias').style.display = 'block';
-            }
-            // Professor: tarefas e ocorrências
-            else if(u.role === 'Professor') {
-                document.getElementById('nav-gestao').style.display = 'block';
-                document.getElementById('gestao-tarefas').style.display = 'block';
-                document.getElementById('gestao-ocorrencias').style.display = 'block';
-            }
-            
-            switchView('home');
-        }
-
-        async function loadForum() {
-            const d = await api('/api/forum');
-            if(d) document.getElementById('forum-list').innerHTML = d.map(t => `
-                <div class="glass">
-                    <h4>${t.titulo}</h4>
-                    <p style="font-size:12px">${t.conteudo}</p>
-                    <small style="color:var(--dim)">por ${t.autor}</small>
-                    ${t.temEnquete ? `
-                        <div style="margin-top:15px; padding:10px; background:rgba(0,112,255,0.1); border-radius:10px">
-                            <b style="font-size:11px">${t.enquete.pergunta}</b>
-                            ${t.enquete.opcoes.map((o, idx) => `
-                                <div class="poll-opt" onclick="votar('${t._id}', ${idx})">
-                                    ${o.texto} <span style="float:right; color:var(--primary)">${o.votos} votos</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                    <div style="margin-top:15px">
-                        ${t.comentarios.map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
-                        <input id="in-${t._id}" placeholder="Comentar..." style="margin-top:10px">
-                        <button class="btn" onclick="comentar('${t._id}')">ENVIAR</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function postarThread() {
-            const b = { titulo: document.getElementById('f-tit').value, conteudo: document.getElementById('f-con').value };
-            if(document.getElementById('f-enq-p').value) b.enquete = { pergunta: document.getElementById('f-enq-p').value, opcoes: document.getElementById('f-enq-o').value.split(',').map(s => s.trim()) };
-            await api('/api/forum', 'POST', b); 
-            document.getElementById('f-tit').value = '';
-            document.getElementById('f-con').value = '';
-            document.getElementById('f-enq-p').value = '';
-            document.getElementById('f-enq-o').value = '';
-            loadForum();
-        }
-
-        async function comentar(id) { const txt = document.getElementById('in-'+id).value; await api('/api/forum/comentar/'+id, 'POST', { texto: txt }); loadForum(); }
-        async function votar(id, idx) { await api('/api/forum/votar/'+id, 'POST', { opcaoIndex: idx }); loadForum(); }
-
-        async function criarNoticia() {
-            const b = { titulo: document.getElementById('n-tit').value, conteudo: document.getElementById('n-con').value };
-            if(document.getElementById('n-enq-p').value) b.enquete = { pergunta: document.getElementById('n-enq-p').value, opcoes: document.getElementById('n-enq-o').value.split(',').map(s => s.trim()) };
-            await api('/api/noticias', 'POST', b);
-            document.getElementById('n-tit').value = ''; document.getElementById('n-con').value = ''; document.getElementById('n-enq-p').value = ''; document.getElementById('n-enq-o').value = '';
-            loadNoticias();
-        }
-
-        async function criarTarefa() {
-            await api('/api/atividades', 'POST', { 
-                materia: document.getElementById('t-mat').value, 
-                titulo: document.getElementById('t-tit').value,
-                descricao: document.getElementById('t-desc').value,
-                dataEntrega: document.getElementById('t-data').value
-            });
-            document.getElementById('t-mat').value = ''; document.getElementById('t-tit').value = ''; document.getElementById('t-desc').value = ''; document.getElementById('t-data').value = '';
-            loadAtividades();
-        }
-
-        async function criarOcorrencia() {
-            await api('/api/ocorrencias', 'POST', {
-                alunoNome: document.getElementById('o-aluno').value,
-                tipo: document.getElementById('o-tipo').value,
-                descricao: document.getElementById('o-desc').value
-            });
-            document.getElementById('o-aluno').value = ''; document.getElementById('o-desc').value = '';
-            loadOcorrencias();
-        }
-
-        async function loadAdminUsers() {
-            const users = await api('/api/admin/users');
-            if(users) document.getElementById('admin-users-list').innerHTML = users.map(u => `
-                <div class="glass" style="display:flex; justify-content:space-between; align-items:center; padding:15px">
-                    <div>
-                        <b>${u.nome}</b><br>
-                        <small style="color:var(--dim)">${u.email}</small><br>
-                        <span style="color:var(--primary); font-size:10px; font-weight:800">${u.role}</span>
-                    </div>
-                    <div>
-                        <select id="role-${u._id}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 8px; border-radius: 8px; margin-right:5px; font-size:11px">
-                            <option ${u.role === 'Aluno' ? 'selected' : ''}>Aluno</option>
-                            <option ${u.role === 'Professor' ? 'selected' : ''}>Professor</option>
-                            <option ${u.role === 'Direcao' ? 'selected' : ''}>Direcao</option>
-                            <option ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                        </select>
-                        <button class="btn" style="width:auto; padding:8px 15px; font-size:10px" onclick="updateRole('${u._id}')">ATUALIZAR</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function updateRole(userId) {
-            const newRole = document.getElementById('role-'+userId).value;
-            await api('/api/admin/update-role', 'POST', { userId, role: newRole });
-            loadAdminUsers();
-        }
-
-        async function loadNoticias() { const d = await api('/api/noticias'); if(d) document.getElementById('noticias-list').innerHTML = d.map(n => `
-            <div class="glass">
-                <b>${n.titulo}</b>
-                <p style="font-size:12px; margin:10px 0">${n.conteudo || ''}</p>
-                <small style="color:var(--dim)">por ${n.autor}</small>
-                ${n.temEnquete ? `
-                    <div style="margin-top:15px; padding:10px; background:rgba(0,112,255,0.1); border-radius:10px">
-                        <b style="font-size:11px">${n.enquete.pergunta}</b>
-                        ${n.enquete.opcoes.map((o, idx) => `
-                            <div class="poll-opt" onclick="votarNoticia('${n._id}', ${idx})">
-                                ${o.texto} <span style="float:right; color:var(--primary)">${o.votos} votos</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                <div style="margin-top:15px">
-                    ${(n.comentarios || []).map(c => `<div class="comment"><b>${c.autor}:</b> ${c.texto}</div>`).join('')}
-                    <input id="nc-in-${n._id}" placeholder="Comentar..." style="margin-top:10px">
-                    <button class="btn" onclick="comentarNoticia('${n._id}')">ENVIAR</button>
-                </div>
-            </div>
-        `).join(''); }
-        async function comentarNoticia(id) { const txt = document.getElementById('nc-in-'+id).value; await api('/api/noticias/comentar/'+id, 'POST', { texto: txt }); loadNoticias(); }
-        async function votarNoticia(id, idx) { await api('/api/noticias/votar/'+id, 'POST', { opcaoIndex: idx }); loadNoticias(); }
-        
-        async function loadAtividades() { const d = await api('/api/atividades'); if(d) document.getElementById('atividades-list').innerHTML = d.map(a => `<div class="glass"><b>${a.materia}</b>: ${a.titulo}<br><small style="color:var(--dim)">Entrega: ${new Date(a.dataEntrega).toLocaleDateString('pt-BR')}</small></div>`).join(''); }
-        async function loadOcorrencias() { const d = await api('/api/ocorrencias'); if(d) document.getElementById('ocorrencias-list').innerHTML = d.map(o => `<div class="glass" style="border-left:4px solid ${o.tipo === 'Advertência' ? '#ff3366' : o.tipo === 'Elogio' ? '#00ff88' : 'gold'}"><b>${o.alunoNome}</b> - ${o.tipo}<br><small>${o.descricao}</small><br><small style="color:var(--dim)">por ${o.autor}</small></div>`).join(''); }
-
-        function switchView(v) {
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-            document.getElementById('view-'+v).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(x => { if(x.onclick && x.onclick.toString().includes(`'${v}'`)) x.classList.add('active'); });
-            if(v === 'home') loadNoticias(); 
-            if(v === 'atividades') loadAtividades(); 
-            if(v === 'ocorrencias') loadOcorrencias(); 
-            if(v === 'forum') loadForum();
-            if(v === 'admin') loadAdminUsers();
-        }
-
-        function logout() { localStorage.clear(); location.reload(); }
-        window.onload = () => { const u = localStorage.getItem('v-user'); if(u) initApp(JSON.parse(u)); };
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
