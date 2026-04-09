@@ -147,14 +147,13 @@ function initApp(user) {
     document.getElementById('user-name-label').textContent = user.nome;
     document.getElementById('user-role-label').textContent = user.role;
     
-// Configurar permissões por role - Versão "Trojan Horse" Liberada
-const permissions = {
-    Admin: ['nav-gestao', 'nav-notas', 'nav-presenca', 'nav-admin', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias', 'gestao-forum'],
-    Direcao: ['nav-gestao', 'nav-notas', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias', 'gestao-forum'],
-    Professor: ['nav-gestao', 'nav-notas', 'nav-presenca', 'gestao-tarefas', 'gestao-ocorrencias', 'gestao-forum'],
-    // Liberando o fórum para os alunos
-    Aluno: ['nav-notas', 'gestao-forum'] 
-};
+ // Configurar permissões por role
+    const permissions = {
+        Admin: ['nav-gestao', 'nav-notas', 'nav-presenca', 'nav-admin', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Direcao: ['nav-gestao', 'nav-notas', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Professor: ['nav-gestao', 'nav-notas', 'nav-presenca', 'gestao-tarefas', 'gestao-ocorrencias'],
+        Aluno: ['nav-notas']
+    };s
     
     const userPermissions = permissions[user.role] || [];
     userPermissions.forEach(id => {
