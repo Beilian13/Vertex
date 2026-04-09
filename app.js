@@ -152,7 +152,7 @@ function initApp(user) {
         Admin: ['nav-gestao', 'nav-notas', 'nav-presenca', 'nav-admin', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
         Direcao: ['nav-gestao', 'nav-notas', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
         Professor: ['nav-gestao', 'nav-notas', 'nav-presenca', 'gestao-tarefas', 'gestao-ocorrencias'],
-        Aluno: ['nav-notas']
+        Aluno: ['nav-notas', 'form-postagem-forum']
     };
     
     const userPermissions = permissions[user.role] || [];
