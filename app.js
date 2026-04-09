@@ -153,7 +153,7 @@ function initApp(user) {
         Direcao: ['nav-gestao', 'nav-notas', 'gestao-noticias', 'gestao-tarefas', 'gestao-ocorrencias'],
         Professor: ['nav-gestao', 'nav-notas', 'nav-presenca', 'gestao-tarefas', 'gestao-ocorrencias'],
         Aluno: ['nav-notas']
-    };s
+    };
     
     const userPermissions = permissions[user.role] || [];
     userPermissions.forEach(id => {
