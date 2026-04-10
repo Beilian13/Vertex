@@ -7,37 +7,39 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-
-// ==================== MIDDLEWARE ====================
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 app.use(express.static(__dirname));
 
-// ==================== CONSTANTS ====================
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://beilianalvarenga_db_user:Beilian1010@cluster0.hhyotua.mongodb.net/Vertex?retryWrites=true&w=majority";
 const JWT_SECRET = process.env.JWT_SECRET || "beilian_secret_key_123";
 const PORT = process.env.PORT || 10000;
 
-// ==================== DATABASE CONNECTION ====================
-mongoose.connect(MONGO_URI, { 
-    dbName: 'Vertex',
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log("✅ [DATABASE] Vertex Blue Edition Conectada"))
-.catch(err => console.error("❌ [DATABASE] Erro:", err.message));
+mongoose.connect(MONGO_URI, { dbName: 'Vertex' })
+    .then(() => {
+        console.log("✅ [DATABASE] Conectado");
+        initializeDefaultData();
+    })
+    .catch(err => console.error("❌ [DATABASE] Erro:", err.message));
 
 // ==================== SCHEMAS ====================
 const UserSchema = new mongoose.Schema({
     nome: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     senha: { type: String, required: true },
-    role: { 
-        type: String, 
-        enum: ['Aluno', 'Professor', 'Direcao', 'Admin'], 
-        default: 'Aluno' 
-    },
+    role: { type: String, enum: ['Aluno', 'Professor', 'Direcao', 'Admin'], default: 'Aluno' },
     avatar: String,
+    bio: String,
+    bannerColor: { type: String, default: '#3b82f6' },
+    serie: String, // "1", "2", ..., "9", "1EM", "2EM", "3EM"
+    createdAt: { type: Date, default: Date.now }
+});
+
+const MateriaSchema = new mongoose.Schema({
+    nome: { type: String, required: true },
+    series: [String], // Séries que têm essa matéria
+    professor: String,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -48,17 +50,10 @@ const ThreadSchema = new mongoose.Schema({
     temEnquete: { type: Boolean, default: false },
     enquete: {
         pergunta: String,
-        opcoes: [{
-            texto: String,
-            votos: { type: Number, default: 0 }
-        }],
+        opcoes: [{ texto: String, votos: { type: Number, default: 0 } }],
         votosUsuarios: [String]
     },
-    comentarios: [{
-        autor: String,
-        texto: String,
-        createdAt: { type: Date, default: Date.now }
-    }],
+    comentarios: [{ autor: String, texto: String, createdAt: { type: Date, default: Date.now } }],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -66,20 +61,6 @@ const NoticiaSchema = new mongoose.Schema({
     titulo: { type: String, required: true },
     conteudo: String,
     autor: { type: String, required: true },
-    temEnquete: { type: Boolean, default: false },
-    enquete: {
-        pergunta: String,
-        opcoes: [{
-            texto: String,
-            votos: { type: Number, default: 0 }
-        }],
-        votosUsuarios: [String]
-    },
-    comentarios: [{
-        autor: String,
-        texto: String,
-        createdAt: { type: Date, default: Date.now }
-    }],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -95,19 +76,8 @@ const AtividadeSchema = new mongoose.Schema({
 const OcorrenciaSchema = new mongoose.Schema({
     alunoNome: { type: String, required: true },
     descricao: { type: String, required: true },
-    tipo: { 
-        type: String, 
-        enum: ['Advertência', 'Suspensão', 'Elogio', 'Observação'],
-        required: true 
-    },
-    status: { type: String, default: 'Em Processo' },
+    tipo: { type: String, enum: ['Advertência', 'Suspensão', 'Elogio', 'Observação'], required: true },
     autor: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const MateriaSchema = new mongoose.Schema({
-    nome: { type: String, required: true },
-    professor: String,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -128,95 +98,141 @@ const PresencaSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+const ArtigoSchema = new mongoose.Schema({
+    titulo: { type: String, required: true },
+    conteudo: { type: String, required: true },
+    autor: { type: String, required: true },
+    videoUrl: String,
+    exercicio: {
+        pergunta: String,
+        opcoes: [String],
+        respostaCorreta: Number
+    },
+    visualizacoes: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const TesteSchema = new mongoose.Schema({
+    titulo: { type: String, required: true },
+    materia: { type: mongoose.Schema.Types.ObjectId, ref: 'Materia', required: true },
+    bimestre: { type: Number, min: 1, max: 4, required: true },
+    professor: { type: String, required: true },
+    questoes: [{
+        pergunta: String,
+        opcoes: [String],
+        respostaCorreta: Number
+    }],
+    ativo: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const RespostaTesteSchema = new mongoose.Schema({
+    testeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teste', required: true },
+    alunoId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    respostas: [Number],
+    nota: Number,
+    createdAt: { type: Date, default: Date.now }
+});
+
 // ==================== MODELS ====================
 const User = mongoose.model('User', UserSchema);
+const Materia = mongoose.model('Materia', MateriaSchema);
 const Thread = mongoose.model('Thread', ThreadSchema);
 const Noticia = mongoose.model('Noticia', NoticiaSchema);
 const Atividade = mongoose.model('Atividade', AtividadeSchema);
 const Ocorrencia = mongoose.model('Ocorrencia', OcorrenciaSchema);
-const Materia = mongoose.model('Materia', MateriaSchema);
 const Nota = mongoose.model('Nota', NotaSchema);
 const Presenca = mongoose.model('Presenca', PresencaSchema);
+const Artigo = mongoose.model('Artigo', ArtigoSchema);
+const Teste = mongoose.model('Teste', TesteSchema);
+const RespostaTeste = mongoose.model('RespostaTeste', RespostaTesteSchema);
 
-// ==================== AUTH MIDDLEWARE ====================
+// ==================== INIT DEFAULT DATA ====================
+async function initializeDefaultData() {
+    try {
+        const count = await Materia.countDocuments();
+        if (count === 0) {
+            const materias = [
+                // Fundamental 1-5 (Professor polivalente)
+                { nome: 'Polivalente', series: ['1', '2', '3', '4', '5'] },
+                
+                // Fundamental 6-9
+                { nome: 'Matemática', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Português', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Inglês', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Ciências', series: ['6', '7', '8', '9'] },
+                { nome: 'História', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Geografia', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Arte', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                { nome: 'Educação Física', series: ['6', '7', '8', '9', '1EM', '2EM', '3EM'] },
+                
+                // Ensino Médio específicas
+                { nome: 'Física', series: ['1EM', '2EM', '3EM'] },
+                { nome: 'Química', series: ['1EM', '2EM', '3EM'] },
+                { nome: 'Biologia', series: ['1EM', '2EM', '3EM'] },
+                { nome: 'Filosofia', series: ['1EM', '2EM', '3EM'] },
+                { nome: 'Sociologia', series: ['1EM', '2EM', '3EM'] },
+                { nome: 'Redação', series: ['1EM', '2EM', '3EM'] }
+            ];
+            
+            await Materia.insertMany(materias);
+            console.log("✅ Matérias padrão criadas");
+        }
+    } catch (error) {
+        console.error("Erro ao criar matérias padrão:", error);
+    }
+}
+
+// ==================== MIDDLEWARE ====================
 const authenticate = (req, res, next) => {
     const token = req.headers.authorization;
-    
-    if (!token) {
-        return res.status(401).json({ msg: "Token não fornecido" });
-    }
+    if (!token) return res.status(401).json({ msg: "Token não fornecido" });
     
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
+        req.user = jwt.verify(token, JWT_SECRET);
         next();
     } catch (error) {
-        return res.status(401).json({ msg: "Token inválido ou expirado" });
+        return res.status(401).json({ msg: "Token inválido" });
     }
 };
 
-const authorize = (minRole) => {
-    return (req, res, next) => {
-        const roles = ['Aluno', 'Professor', 'Direcao', 'Admin'];
-        const userRoleIndex = roles.indexOf(req.user.role);
-        const minRoleIndex = roles.indexOf(minRole);
-        
-        if (userRoleIndex >= minRoleIndex) {
-            return next();
-        }
-        
-        return res.status(403).json({ msg: "Permissão insuficiente" });
-    };
+const authorize = (minRole) => (req, res, next) => {
+    const roles = ['Aluno', 'Professor', 'Direcao', 'Admin'];
+    if (roles.indexOf(req.user.role) >= roles.indexOf(minRole)) return next();
+    return res.status(403).json({ msg: "Permissão insuficiente" });
 };
 
-// ==================== AUTH ROUTES ====================
+// ==================== AUTH ====================
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
+        if (!nome || !email || !senha) return res.status(400).json({ msg: "Campos obrigatórios" });
         
-        if (!nome || !email || !senha) {
-            return res.status(400).json({ msg: "Preencha todos os campos" });
-        }
-        
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ msg: "Email já cadastrado" });
-        }
+        const existing = await User.findOne({ email });
+        if (existing) return res.status(400).json({ msg: "Email já cadastrado" });
         
         const hashedPassword = await bcrypt.hash(senha, 10);
-        const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${nome}`;
-        
         await User.create({
             nome,
             email,
             senha: hashedPassword,
-            avatar
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + nome
         });
         
-        res.status(201).json({ msg: "Usuário criado com sucesso" });
+        res.status(201).json({ msg: "Usuário criado" });
     } catch (error) {
         console.error('Register error:', error);
-        res.status(500).json({ msg: "Erro ao criar usuário" });
+        res.status(500).json({ msg: "Erro ao registrar" });
     }
 });
 
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
-        
-        if (!email || !senha) {
-            return res.status(400).json({ msg: "Preencha todos os campos" });
-        }
+        if (!email || !senha) return res.status(400).json({ msg: "Campos obrigatórios" });
         
         const user = await User.findOne({ email });
-        
-        if (!user) {
-            return res.status(401).json({ msg: "Credenciais inválidas" });
-        }
-        
-        const isValidPassword = await bcrypt.compare(senha, user.senha);
-        
-        if (!isValidPassword) {
+        if (!user || !(await bcrypt.compare(senha, user.senha))) {
             return res.status(401).json({ msg: "Credenciais inválidas" });
         }
         
@@ -226,25 +242,29 @@ app.post('/api/auth/login', async (req, res) => {
             { expiresIn: '7d' }
         );
         
-        res.json({
-            token,
-            nome: user.nome,
-            role: user.role,
-            avatar: user.avatar
-        });
+        res.json({ token, nome: user.nome, role: user.role, avatar: user.avatar });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ msg: "Erro ao fazer login" });
     }
 });
 
-// ==================== FORUM ROUTES ====================
+// ==================== MATERIAS ====================
+app.get('/api/materias', authenticate, async (req, res) => {
+    try {
+        const materias = await Materia.find();
+        res.json(materias);
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao buscar matérias" });
+    }
+});
+
+// ==================== FORUM ====================
 app.get('/api/forum', authenticate, async (req, res) => {
     try {
         const threads = await Thread.find().sort({ createdAt: -1 });
         res.json(threads);
     } catch (error) {
-        console.error('Forum get error:', error);
         res.status(500).json({ msg: "Erro ao buscar fórum" });
     }
 });
@@ -252,12 +272,7 @@ app.get('/api/forum', authenticate, async (req, res) => {
 app.post('/api/forum', authenticate, async (req, res) => {
     try {
         const { titulo, conteudo, enquete } = req.body;
-        
-        const threadData = {
-            titulo,
-            conteudo,
-            autor: req.user.nome
-        };
+        const threadData = { titulo, conteudo, autor: req.user.nome };
         
         if (enquete && enquete.pergunta && enquete.opcoes) {
             threadData.temEnquete = true;
@@ -271,252 +286,112 @@ app.post('/api/forum', authenticate, async (req, res) => {
         const thread = await Thread.create(threadData);
         res.status(201).json(thread);
     } catch (error) {
-        console.error('Forum post error:', error);
         res.status(500).json({ msg: "Erro ao criar thread" });
     }
 });
 
 app.post('/api/forum/comentar/:id', authenticate, async (req, res) => {
     try {
-        const { texto } = req.body;
         const thread = await Thread.findById(req.params.id);
+        if (!thread) return res.status(404).json({ msg: "Thread não encontrada" });
         
-        if (!thread) {
-            return res.status(404).json({ msg: "Thread não encontrada" });
-        }
-        
-        thread.comentarios.push({
-            autor: req.user.nome,
-            texto
-        });
-        
+        thread.comentarios.push({ autor: req.user.nome, texto: req.body.texto });
         await thread.save();
         res.json(thread);
     } catch (error) {
-        console.error('Comment error:', error);
         res.status(500).json({ msg: "Erro ao comentar" });
     }
 });
 
 app.post('/api/forum/votar/:id', authenticate, async (req, res) => {
     try {
-        const { opcaoIndex } = req.body;
         const thread = await Thread.findById(req.params.id);
+        if (!thread || !thread.temEnquete) return res.status(404).json({ msg: "Enquete não encontrada" });
         
-        if (!thread || !thread.temEnquete) {
-            return res.status(404).json({ msg: "Enquete não encontrada" });
-        }
-        
-        if (!thread.enquete.votosUsuarios) {
-            thread.enquete.votosUsuarios = [];
-        }
-        
+        if (!thread.enquete.votosUsuarios) thread.enquete.votosUsuarios = [];
         if (thread.enquete.votosUsuarios.includes(req.user.id)) {
-            return res.status(400).json({ msg: "Você já votou nesta enquete" });
+            return res.status(400).json({ msg: "Já votou" });
         }
         
-        thread.enquete.opcoes[opcaoIndex].votos += 1;
+        thread.enquete.opcoes[req.body.opcaoIndex].votos += 1;
         thread.enquete.votosUsuarios.push(req.user.id);
-        
         await thread.save();
         res.json(thread);
     } catch (error) {
-        console.error('Vote error:', error);
         res.status(500).json({ msg: "Erro ao votar" });
     }
 });
 
-// ==================== NOTICIAS ROUTES ====================
+// ==================== NOTICIAS ====================
 app.get('/api/noticias', authenticate, async (req, res) => {
     try {
         const noticias = await Noticia.find().sort({ createdAt: -1 });
         res.json(noticias);
     } catch (error) {
-        console.error('Noticias get error:', error);
         res.status(500).json({ msg: "Erro ao buscar notícias" });
     }
 });
 
 app.post('/api/noticias', authenticate, authorize('Direcao'), async (req, res) => {
     try {
-        const { titulo, conteudo, enquete } = req.body;
-        
-        const noticiaData = {
-            titulo,
-            conteudo,
-            autor: req.user.nome
-        };
-        
-        if (enquete && enquete.pergunta && enquete.opcoes) {
-            noticiaData.temEnquete = true;
-            noticiaData.enquete = {
-                pergunta: enquete.pergunta,
-                opcoes: enquete.opcoes.map(texto => ({ texto, votos: 0 })),
-                votosUsuarios: []
-            };
-        }
-        
-        const noticia = await Noticia.create(noticiaData);
+        const noticia = await Noticia.create({ ...req.body, autor: req.user.nome });
         res.status(201).json(noticia);
     } catch (error) {
-        console.error('Noticia post error:', error);
         res.status(500).json({ msg: "Erro ao criar notícia" });
     }
 });
 
-app.post('/api/noticias/comentar/:id', authenticate, async (req, res) => {
-    try {
-        const { texto } = req.body;
-        const noticia = await Noticia.findById(req.params.id);
-        
-        if (!noticia) {
-            return res.status(404).json({ msg: "Notícia não encontrada" });
-        }
-        
-        noticia.comentarios.push({
-            autor: req.user.nome,
-            texto
-        });
-        
-        await noticia.save();
-        res.json(noticia);
-    } catch (error) {
-        console.error('Comment noticia error:', error);
-        res.status(500).json({ msg: "Erro ao comentar" });
-    }
-});
-
-app.post('/api/noticias/votar/:id', authenticate, async (req, res) => {
-    try {
-        const { opcaoIndex } = req.body;
-        const noticia = await Noticia.findById(req.params.id);
-        
-        if (!noticia || !noticia.temEnquete) {
-            return res.status(404).json({ msg: "Enquete não encontrada" });
-        }
-        
-        if (!noticia.enquete.votosUsuarios) {
-            noticia.enquete.votosUsuarios = [];
-        }
-        
-        if (noticia.enquete.votosUsuarios.includes(req.user.id)) {
-            return res.status(400).json({ msg: "Você já votou nesta enquete" });
-        }
-        
-        noticia.enquete.opcoes[opcaoIndex].votos += 1;
-        noticia.enquete.votosUsuarios.push(req.user.id);
-        
-        await noticia.save();
-        res.json(noticia);
-    } catch (error) {
-        console.error('Vote noticia error:', error);
-        res.status(500).json({ msg: "Erro ao votar" });
-    }
-});
-
-// ==================== ATIVIDADES ROUTES ====================
+// ==================== ATIVIDADES ====================
 app.get('/api/atividades', authenticate, async (req, res) => {
     try {
         const atividades = await Atividade.find().sort({ dataEntrega: 1 });
         res.json(atividades);
     } catch (error) {
-        console.error('Atividades get error:', error);
         res.status(500).json({ msg: "Erro ao buscar atividades" });
     }
 });
 
 app.post('/api/atividades', authenticate, authorize('Professor'), async (req, res) => {
     try {
-        const { materia, titulo, descricao, dataEntrega } = req.body;
-        
-        const atividade = await Atividade.create({
-            materia,
-            titulo,
-            descricao,
-            dataEntrega,
-            autor: req.user.nome
-        });
-        
+        const atividade = await Atividade.create({ ...req.body, autor: req.user.nome });
         res.status(201).json(atividade);
     } catch (error) {
-        console.error('Atividade post error:', error);
         res.status(500).json({ msg: "Erro ao criar atividade" });
     }
 });
 
-// ==================== OCORRENCIAS ROUTES ====================
+// ==================== OCORRENCIAS ====================
 app.get('/api/ocorrencias', authenticate, async (req, res) => {
     try {
-        let query = {};
-        
-        if (req.user.role === 'Aluno') {
-            query.alunoNome = req.user.nome;
-        }
-        
+        const query = req.user.role === 'Aluno' ? { alunoNome: req.user.nome } : {};
         const ocorrencias = await Ocorrencia.find(query).sort({ createdAt: -1 });
         res.json(ocorrencias);
     } catch (error) {
-        console.error('Ocorrencias get error:', error);
         res.status(500).json({ msg: "Erro ao buscar ocorrências" });
     }
 });
 
 app.post('/api/ocorrencias', authenticate, authorize('Professor'), async (req, res) => {
     try {
-        const { alunoNome, tipo, descricao } = req.body;
-        
-        const ocorrencia = await Ocorrencia.create({
-            alunoNome,
-            tipo,
-            descricao,
-            autor: req.user.nome
-        });
-        
+        const ocorrencia = await Ocorrencia.create({ ...req.body, autor: req.user.nome });
         res.status(201).json(ocorrencia);
     } catch (error) {
-        console.error('Ocorrencia post error:', error);
         res.status(500).json({ msg: "Erro ao criar ocorrência" });
     }
 });
 
-// ==================== MATERIAS ROUTES ====================
-app.get('/api/materias', authenticate, async (req, res) => {
-    try {
-        const materias = await Materia.find();
-        res.json(materias);
-    } catch (error) {
-        console.error('Materias get error:', error);
-        res.status(500).json({ msg: "Erro ao buscar matérias" });
-    }
-});
-
-app.post('/api/materias', authenticate, authorize('Admin'), async (req, res) => {
-    try {
-        const materia = await Materia.create(req.body);
-        res.status(201).json(materia);
-    } catch (error) {
-        console.error('Materia post error:', error);
-        res.status(500).json({ msg: "Erro ao criar matéria" });
-    }
-});
-
-// ==================== NOTAS ROUTES ====================
+// ==================== NOTAS ====================
 app.get('/api/notas', authenticate, async (req, res) => {
     try {
         const { materia, bimestre } = req.query;
         let query = {};
-        
         if (materia) query.materia = materia;
         if (bimestre) query.bimestre = parseInt(bimestre);
-        
-        if (req.user.role === 'Aluno') {
-            query.alunoId = req.user.id;
-        }
+        if (req.user.role === 'Aluno') query.alunoId = req.user.id;
         
         const notas = await Nota.find(query);
         res.json(notas);
     } catch (error) {
-        console.error('Notas get error:', error);
         res.status(500).json({ msg: "Erro ao buscar notas" });
     }
 });
@@ -524,7 +399,6 @@ app.get('/api/notas', authenticate, async (req, res) => {
 app.post('/api/notas', authenticate, authorize('Professor'), async (req, res) => {
     try {
         const { alunoId, materia, bimestre, tipo, nota } = req.body;
-        
         const existing = await Nota.findOne({ alunoId, materia, bimestre, tipo });
         
         if (existing) {
@@ -536,24 +410,21 @@ app.post('/api/notas', authenticate, authorize('Professor'), async (req, res) =>
             res.status(201).json(newNota);
         }
     } catch (error) {
-        console.error('Nota post error:', error);
         res.status(500).json({ msg: "Erro ao salvar nota" });
     }
 });
 
-// ==================== PRESENCAS ROUTES ====================
+// ==================== PRESENCAS ====================
 app.get('/api/presencas', authenticate, async (req, res) => {
     try {
         const { materia, data } = req.query;
         let query = {};
-        
         if (materia) query.materia = materia;
         if (data) query.data = new Date(data);
         
         const presencas = await Presenca.find(query);
         res.json(presencas);
     } catch (error) {
-        console.error('Presencas get error:', error);
         res.status(500).json({ msg: "Erro ao buscar presenças" });
     }
 });
@@ -561,61 +432,101 @@ app.get('/api/presencas', authenticate, async (req, res) => {
 app.post('/api/presencas/batch', authenticate, authorize('Professor'), async (req, res) => {
     try {
         const { registros } = req.body;
-        
-        for (const registro of registros) {
-            const { alunoId, materia, data, status } = registro;
-            
+        for (const reg of registros) {
             const existing = await Presenca.findOne({
-                alunoId,
-                materia,
-                data: new Date(data)
+                alunoId: reg.alunoId,
+                materia: reg.materia,
+                data: new Date(reg.data)
             });
             
             if (existing) {
-                existing.status = status;
+                existing.status = reg.status;
                 await existing.save();
             } else {
-                await Presenca.create(registro);
+                await Presenca.create(reg);
             }
         }
-        
-        res.json({ msg: "Presenças salvas com sucesso" });
+        res.json({ msg: "Presenças salvas" });
     } catch (error) {
-        console.error('Presenca batch error:', error);
         res.status(500).json({ msg: "Erro ao salvar presenças" });
     }
 });
 
-// ==================== ALUNOS ROUTE ====================
+// ==================== BIBLIOTECA ====================
+app.get('/api/artigos', authenticate, async (req, res) => {
+    try {
+        const artigos = await Artigo.find().sort({ createdAt: -1 });
+        res.json(artigos);
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao buscar artigos" });
+    }
+});
+
+app.post('/api/artigos', authenticate, async (req, res) => {
+    try {
+        const artigo = await Artigo.create({ ...req.body, autor: req.user.nome });
+        res.status(201).json(artigo);
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao criar artigo" });
+    }
+});
+
+app.post('/api/artigos/exercicio/:id', authenticate, async (req, res) => {
+    try {
+        const artigo = await Artigo.findById(req.params.id);
+        if (!artigo || !artigo.exercicio) return res.status(404).json({ msg: "Exercício não encontrado" });
+        
+        const correto = artigo.exercicio.respostaCorreta === req.body.opcaoIndex;
+        res.json({ correto, respostaCorreta: artigo.exercicio.respostaCorreta });
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao responder exercício" });
+    }
+});
+
+// ==================== TESTES ====================
+app.get('/api/testes', authenticate, async (req, res) => {
+    try {
+        const testes = await Teste.find({ ativo: true }).sort({ createdAt: -1 });
+        res.json(testes);
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao buscar testes" });
+    }
+});
+
+app.post('/api/testes', authenticate, authorize('Professor'), async (req, res) => {
+    try {
+        const teste = await Teste.create({ ...req.body, professor: req.user.nome });
+        res.status(201).json(teste);
+    } catch (error) {
+        res.status(500).json({ msg: "Erro ao criar teste" });
+    }
+});
+
+// ==================== ALUNOS ====================
 app.get('/api/alunos', authenticate, async (req, res) => {
     try {
         const alunos = await User.find({ role: 'Aluno' }, 'nome email');
         res.json(alunos);
     } catch (error) {
-        console.error('Alunos get error:', error);
         res.status(500).json({ msg: "Erro ao buscar alunos" });
     }
 });
 
-// ==================== ADMIN ROUTES ====================
+// ==================== ADMIN ====================
 app.get('/api/admin/users', authenticate, authorize('Admin'), async (req, res) => {
     try {
         const users = await User.find({}, 'nome email role');
         res.json(users);
     } catch (error) {
-        console.error('Admin users error:', error);
         res.status(500).json({ msg: "Erro ao buscar usuários" });
     }
 });
 
 app.post('/api/admin/update-role', authenticate, authorize('Admin'), async (req, res) => {
     try {
-        const { userId, role } = req.body;
-        
-        await User.findByIdAndUpdate(userId, { role });
-        res.json({ msg: "Role atualizada com sucesso" });
+        await User.findByIdAndUpdate(req.body.userId, { role: req.body.role });
+        res.json({ msg: "Role atualizada" });
     } catch (error) {
-        console.error('Update role error:', error);
         res.status(500).json({ msg: "Erro ao atualizar role" });
     }
 });
@@ -625,7 +536,6 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ==================== START SERVER ====================
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ VERTEX ONLINE NA PORTA ${PORT}`);
+    console.log('✅ VERTEX ONLINE NA PORTA ' + PORT);
 });
