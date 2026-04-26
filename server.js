@@ -4,18 +4,35 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 
-// ==================== SECURITY MIDDLEWARE ====================
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-});
+// ==================== SIMPLE RATE LIMITING ====================
+const rateLimitMap = new Map();
 
-app.use(limiter);
+const simpleRateLimit = (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000; // 15 minutos
+    const maxRequests = 200;
+    
+    if (!rateLimitMap.has(ip)) {
+        rateLimitMap.set(ip, []);
+    }
+    
+    const requests = rateLimitMap.get(ip).filter(time => now - time < windowMs);
+    requests.push(now);
+    rateLimitMap.set(ip, requests);
+    
+    if (requests.length > maxRequests) {
+        return res.status(429).json({ msg: "Muitas requisições. Tente novamente mais tarde." });
+    }
+    
+    next();
+};
+
+app.use(simpleRateLimit);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
