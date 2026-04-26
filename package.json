@@ -1,6 +1,6 @@
 {
   "name": "vertex-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -12,5 +12,8 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "dotenv": "^16.0.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
